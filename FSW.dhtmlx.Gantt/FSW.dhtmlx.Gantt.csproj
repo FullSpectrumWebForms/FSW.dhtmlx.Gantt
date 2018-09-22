@@ -37,10 +37,15 @@
 
   <ItemGroup>
     <EmbeddedResource Include="wwwroot\js\**\*.js" />
+    <EmbeddedResource Include="wwwroot\lib\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\lib\" />
+    <Content Remove="wwwroot\lib\dhtmlxGantt\dhtmlxgantt.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\lib\dhtmlxGantt\typescript\dhtmlxgantt.ts" />
   </ItemGroup>
   
 </Project>

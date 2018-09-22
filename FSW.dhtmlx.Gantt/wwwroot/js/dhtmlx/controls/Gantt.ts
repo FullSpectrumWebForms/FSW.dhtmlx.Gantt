@@ -4,22 +4,83 @@
 namespace controls.html.dhtmlx {
 
 
+    interface GanttItem {
+        Id: number;
+        text: string;
+        start_date: Date;
+        duration: number;
+        order: number;
+        progress: number;
+        parent: number;
+        open: boolean;
+    }
 
-    export class gantt extends controls.html.htmlControlBase {
+    interface GanttLink {
+        id: number;
+        source: number;
+        target: number;
+        type: string;
+        readonly?: boolean;
+        editable?: boolean;
+    }
 
-        // ------------------------------------------------------------------------   ChartType
-        get ChartType(): string {
-            return this.getPropertyValue<this, string>("ChartType").toLocaleLowerCase();
+    export class Gantt extends controls.html.htmlControlBase {
+
+        // ------------------------------------------------------------------------   Items
+        get Items(): GanttItem[] {
+            return this.getPropertyValue<this, GanttItem[]>("Items");
         }
-        set ChartType(value: string) {
-            this.setPropertyValue<this>("ChartType", value);
+        // ------------------------------------------------------------------------   Links
+        get Links(): GanttLink[] {
+            return this.getPropertyValue<this, GanttLink[]>("Links");
         }
-        
+
 
         initialize(type: string, index: number, id: string, properties: { property: string, value: any }[]) {
             super.initialize(type, index, id, properties);
 
 
+            gantt.init(this.element[0]);
+
+            gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this));
+
+            this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this), true);
+            this.getProperty("Links").onChangedFromServer.register(this.onLinksChangedFromServer.bind(this), true);
+        }
+
+        onAfterTaskDrag(id, mode) {
+            var task = gantt.getTask(id);
+            if (mode == gantt.config.drag_mode.progress) {
+                this.customControlEvent('OnItemProgressionChangedFromClient', {
+                    id: id,
+                    progression: task.progress
+                });
+            } else {
+                var convert = gantt.date.date_to_str("%d-%m-%Y");
+                var s = convert(task.start_date);
+                var e = convert(task.end_date);
+
+                this.customControlEvent('OnItemDraggedFromClient', {
+                    id: id,
+                    newStart: s,
+                    newEnd: e,
+                    mode: mode
+                });
+            }
+        }
+
+        doParse() {
+            gantt.parse({
+                data: this.Items,
+                links: this.Links
+            });
+        }
+
+        onItemsChangedFromServer() {
+            this.doParse();
+        }
+        onLinksChangedFromServer() {
+            this.doParse();
         }
 
         protected initializeHtmlElement(): void {
@@ -29,4 +90,4 @@ namespace controls.html.dhtmlx {
 
     }
 }
-core.controlTypes['dhtmlx.Gantt'] = () => new controls.html.dhtmlx.gantt();
+core.controlTypes['dhtmlx.Gantt'] = () => new controls.html.dhtmlx.Gantt();
