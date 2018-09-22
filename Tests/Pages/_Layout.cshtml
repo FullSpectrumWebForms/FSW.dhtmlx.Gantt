@@ -1,0 +1,25 @@
+﻿<!DOCTYPE html>
+<input id="pageId" style="display:none" value="@Model.CurrentPageID" />
+<input id="pageIdAuth" style="display:none" value="@Model.CurrentPageAuth" />
+<input id="typePath" style="display:none" value="@Model.CurrentPageTypePath" />
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - Tests AmCharts</title>
+
+    <link rel="stylesheet" href="/fsw.min.css" />
+
+    <script src="/fsw.min.js"></script>
+
+</head>
+<body>
+
+    <div style="width: calc( 100% - 215px ); left: 215px; position: relative; height: 100%">
+        @RenderBody()
+    </div>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
