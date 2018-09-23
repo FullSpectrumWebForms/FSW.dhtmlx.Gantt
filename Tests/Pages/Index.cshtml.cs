@@ -18,6 +18,8 @@ namespace Tests.Pages
         {
             base.OnPageLoad();
 
+            TestGantt.Scale = GanttScale.Week;
+
             var project2 = new GanttItem
             {
                 Id = 1,

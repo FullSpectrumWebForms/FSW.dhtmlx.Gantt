@@ -108,12 +108,22 @@ namespace FSW.dhtmlx
             }
         }
     }
+    public enum GanttScale
+    {
+        Default = 0, Week = 1
+    }
 
     public class Gantt : Controls.Html.HtmlControlBase
     {
         public override string ControlType => "dhtmlx.Gantt";
         public ControlPropertyList<GanttItem> Items { get; private set; }
         public ControlPropertyList<GanttLink> Links { get; private set; }
+
+        public GanttScale Scale
+        {
+            get => (GanttScale)Enum.Parse(typeof(GanttScale), GetProperty<string>(nameof(Scale)));
+            set => SetProperty(nameof(Scale), value.ToString());
+        }
 
         public delegate void OnItemResizedHandler(GanttItem item, DateTime oldStart, int oldDuration);
         public event OnItemResizedHandler OnItemResized;
@@ -124,14 +134,13 @@ namespace FSW.dhtmlx
         public delegate void OnItemProgressDraggedHandler(GanttItem item, float oldProgress);
         public event OnItemProgressDraggedHandler OnItemProgressDragged;
 
-
-
         public override void InitializeProperties()
         {
             base.InitializeProperties();
 
             Items = new ControlPropertyList<GanttItem>(this, nameof(Items));
             Links = new ControlPropertyList<GanttLink>(this, nameof(Links));
+            Scale = GanttScale.Default;
         }
 
         [Core.CoreEvent]

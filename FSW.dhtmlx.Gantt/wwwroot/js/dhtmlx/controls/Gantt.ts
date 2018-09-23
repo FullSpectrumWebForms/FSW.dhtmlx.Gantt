@@ -34,18 +34,32 @@ namespace controls.html.dhtmlx {
         get Links(): GanttLink[] {
             return this.getPropertyValue<this, GanttLink[]>("Links");
         }
-
+        // ------------------------------------------------------------------------   Items
+        get Scale(): string {
+            return this.getPropertyValue<this, string>("Scale");
+        }
+        events: any[] = [];
 
         initialize(type: string, index: number, id: string, properties: { property: string, value: any }[]) {
             super.initialize(type, index, id, properties);
 
+            if (this.Scale == 'Week') {
+                gantt.config.subscales = [{ unit: 'week', step: 1, date: '%F %d' }];
+                gantt.config.scale_unit = 'month';
+                gantt.config.date_scale = '%F';
+            }
 
             gantt.init(this.element[0]);
 
-            gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this));
+            this.events.push(gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
 
             this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this), true);
             this.getProperty("Links").onChangedFromServer.register(this.onLinksChangedFromServer.bind(this), true);
+        }
+
+        removeControl() {
+            while (this.events.length)
+                gantt.detachEvent(this.events.pop());
         }
 
         onAfterTaskDrag(id, mode) {

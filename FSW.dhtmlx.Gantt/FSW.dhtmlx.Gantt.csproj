@@ -3,7 +3,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>FSW.dhtmlx.Gantt</PackageId>
-    <Version>1.0.0.1</Version>
+    <Version>1.0.1.2</Version>
     <Authors>Pascal Arnold</Authors>
     <Company>N/A</Company>
     <PackageTags>FSW dhtmlx gantt</PackageTags>
@@ -17,6 +17,7 @@
     <OutputType>Library</OutputType>
     <StartupObject />
     <RootNamespace>FSW.dhtmlx</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,7 +29,7 @@
 
   <ItemGroup>
     <Content Remove="dt/**"></Content>
-    <Content Include="dt/**/*.d.ts"></Content>
+    <Content Include="dt/**/*.d.ts" Pack="false"></Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -38,14 +39,16 @@
   <ItemGroup>
     <EmbeddedResource Include="wwwroot\js\**\*.js" />
     <EmbeddedResource Include="wwwroot\lib\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="wwwroot\lib\dhtmlxGantt\dhtmlxgantt.ts" />
+    <EmbeddedResource Remove="wwwroot\**\*.ts" />
   </ItemGroup>
 
   <ItemGroup>
     <TypeScriptCompile Include="wwwroot\lib\dhtmlxGantt\typescript\dhtmlxgantt.ts" />
   </ItemGroup>
   
+  <ItemGroup>
+    <Content Update="wwwroot\**\*.ts" Pack="false"></Content>
+    <Content Update="tsconfig.json" Pack="false"></Content>
+  </ItemGroup>
+
 </Project>
