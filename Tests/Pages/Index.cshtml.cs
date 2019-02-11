@@ -19,6 +19,7 @@ namespace Tests.Pages
             base.OnPageLoad();
 
             TestGantt.Scale = GanttScale.Week;
+            TestGantt.RowHeight = 20;
 
             var project2 = new GanttItem
             {

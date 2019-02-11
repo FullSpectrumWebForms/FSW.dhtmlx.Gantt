@@ -38,6 +38,10 @@ namespace controls.html.dhtmlx {
         get Scale(): string {
             return this.getPropertyValue<this, string>("Scale");
         }
+
+        get RowHeight(): number {
+            return this.getPropertyValue<this, number>("RowHeight");
+        }
         events: any[] = [];
 
         initialize(type: string, index: number, id: string, properties: { property: string, value: any }[]) {
@@ -48,6 +52,9 @@ namespace controls.html.dhtmlx {
                 gantt.config.scale_unit = 'month';
                 gantt.config.date_scale = '%F';
             }
+
+            if (this.RowHeight)
+                gantt.config.row_height = this.RowHeight;
 
             gantt.init(this.element[0]);
 

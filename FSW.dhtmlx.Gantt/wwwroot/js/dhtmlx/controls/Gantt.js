@@ -22,6 +22,9 @@ var controls;
                 get Scale() {
                     return this.getPropertyValue("Scale");
                 }
+                get RowHeight() {
+                    return this.getPropertyValue("RowHeight");
+                }
                 initialize(type, index, id, properties) {
                     super.initialize(type, index, id, properties);
                     if (this.Scale == 'Week') {
@@ -29,6 +32,8 @@ var controls;
                         gantt.config.scale_unit = 'month';
                         gantt.config.date_scale = '%F';
                     }
+                    if (this.RowHeight)
+                        gantt.config.row_height = this.RowHeight;
                     gantt.init(this.element[0]);
                     this.events.push(gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
                     this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this), true);

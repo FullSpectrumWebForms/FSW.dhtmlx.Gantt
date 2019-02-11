@@ -119,6 +119,13 @@ namespace FSW.dhtmlx
         public ControlPropertyList<GanttItem> Items { get; private set; }
         public ControlPropertyList<GanttLink> Links { get; private set; }
 
+        public int? RowHeight
+        {
+            get => GetProperty<int?>(PropertyName());
+            set => SetProperty(PropertyName(), value);
+        }
+
+
         public GanttScale Scale
         {
             get => (GanttScale)Enum.Parse(typeof(GanttScale), GetProperty<string>(nameof(Scale)));
@@ -141,6 +148,7 @@ namespace FSW.dhtmlx
             Items = new ControlPropertyList<GanttItem>(this, nameof(Items));
             Links = new ControlPropertyList<GanttLink>(this, nameof(Links));
             Scale = GanttScale.Default;
+            RowHeight = null;
         }
 
         [Core.CoreEvent]
