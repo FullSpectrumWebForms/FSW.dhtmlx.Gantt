@@ -4,3 +4,5 @@
 /Tests/obj
 /Tests/bin
 /.vs
+/FSW.dhtmlx.Gantt/node_modules/@types
+/FSW.dhtmlx.Gantt/package-lock.json
