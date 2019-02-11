@@ -60,7 +60,7 @@ namespace controls.html.dhtmlx {
 
             this.events.push(gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
 
-            this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this), true);
+            this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this));
             this.getProperty("Links").onChangedFromServer.register(this.onLinksChangedFromServer.bind(this), true);
         }
 
