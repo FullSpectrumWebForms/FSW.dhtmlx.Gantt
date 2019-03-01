@@ -18,8 +18,8 @@ namespace Tests.Pages
         {
             base.OnPageLoad();
 
-            TestGantt.Scale = GanttScale.Week;
-            TestGantt.RowHeight = 20;
+            //TestGantt.Scale = GanttScale.Week;
+            //TestGantt.RowHeight = 20;
 
             var project2 = new GanttItem
             {
@@ -32,30 +32,34 @@ namespace Tests.Pages
                 Open = true
             };
 
-            TestGantt.Items.Set(new List<GanttItem>
+            int id = 1;
+            TestGantt.Items.Set(Enumerable.Range(0, 2000).SelectMany(x =>
             {
-                project2,
-                new GanttItem
+                return new List<GanttItem>
                 {
-                    Id = 2,
-                    Text = "Task #1",
-                    StartDate = DateTime.Today.Add(TimeSpan.FromDays(1)),
-                    Duration = 8,
-                    Order = 10,
-                    Progress = 0.6f,
-                    Parent = project2
-                },
-                new GanttItem
-                {
-                    Id = 3,
-                    Text = "Task #2",
-                    StartDate = DateTime.Today.Add(TimeSpan.FromDays(5)),
-                    Duration = 8,
-                    Order = 20,
-                    Progress = 0.6f,
-                    Parent = project2
-                }
-            });
+                    project2,
+                    new GanttItem
+                    {
+                        Id = ++id,
+                        Text = "Task #1",
+                        StartDate = DateTime.Today.Add(TimeSpan.FromDays(1)),
+                        Duration = 8,
+                        Order = 10,
+                        Progress = 0.6f,
+                        Parent = project2
+                    },
+                    new GanttItem
+                    {
+                        Id = ++id,
+                        Text = "Task #2",
+                        StartDate = DateTime.Today.Add(TimeSpan.FromDays(5)),
+                        Duration = 8,
+                        Order = 20,
+                        Progress = 0.6f,
+                        Parent = project2
+                    }
+                };
+            }).ToList());
             TestGantt.Links.Set(new List<GanttLink>
             {
                 new GanttLink

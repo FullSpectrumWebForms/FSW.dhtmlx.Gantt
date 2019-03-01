@@ -56,6 +56,7 @@ namespace controls.html.dhtmlx {
             if (this.RowHeight)
                 gantt.config.row_height = this.RowHeight;
 
+
             gantt.init(this.element[0]);
 
             this.events.push(gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));

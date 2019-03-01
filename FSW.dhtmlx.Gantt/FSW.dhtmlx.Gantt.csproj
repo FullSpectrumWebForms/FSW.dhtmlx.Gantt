@@ -3,7 +3,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>FSW.dhtmlx.Gantt</PackageId>
-    <Version>1.0.1.4</Version>
+    <Version>1.0.2.7</Version>
     <Authors>Pascal Arnold</Authors>
     <Company>N/A</Company>
     <PackageTags>FSW dhtmlx gantt</PackageTags>
@@ -21,10 +21,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSW" Version="1.6.3.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.1.2" />
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="2.1.1" />
+    <PackageReference Include="FSW" Version="2.0.14.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,10 +40,6 @@
     <EmbeddedResource Include="wwwroot\js\**\*.js" />
     <EmbeddedResource Include="wwwroot\lib\**" />
     <EmbeddedResource Remove="wwwroot\**\*.ts" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <TypeScriptCompile Include="wwwroot\lib\dhtmlxGantt\typescript\dhtmlxgantt.ts" />
   </ItemGroup>
   
   <ItemGroup>
