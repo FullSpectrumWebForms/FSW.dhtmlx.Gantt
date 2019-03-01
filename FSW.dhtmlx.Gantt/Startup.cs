@@ -23,6 +23,7 @@ namespace FSW.dhtmlx
             {
                 "wwwroot.lib.dhtmlxGantt.dhtmlxgantt.js",
                 "wwwroot.lib.dhtmlxGantt.ext.dhtmlxgantt_smart_rendering.js",
+                "wwwroot.lib.dhtmlxGantt.ext.dhtmlxgantt_tooltip.js",
                 "wwwroot.lib.dhtmlxGantt.dhtmlxgantt.css",
                 "wwwroot.js.dhtmlx.controls.Gantt.js",
             });

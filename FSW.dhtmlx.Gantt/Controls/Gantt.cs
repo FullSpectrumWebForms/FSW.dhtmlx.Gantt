@@ -110,14 +110,41 @@ namespace FSW.dhtmlx
     }
     public enum GanttScale
     {
-        Default = 0, Week = 1
+        Week, Month, Year
     }
+
+    public class GanttSubScale
+    {
+        [JsonProperty]
+        private string unit = (GanttScale.Week).ToString().ToLower();
+        [JsonIgnore]
+        public GanttScale Unit
+        {
+            get => (GanttScale)Enum.Parse(typeof(GanttScale), unit, true);
+            set => unit = value.ToString().ToLower();
+        }
+
+        public int Step { get; set; }
+    }
+
 
     public class Gantt : Controls.Html.HtmlControlBase
     {
         public override string ControlType => "dhtmlx.Gantt";
-        public ControlPropertyList<GanttItem> Items { get; private set; }
-        public ControlPropertyList<GanttLink> Links { get; private set; }
+
+        private ControlPropertyList<GanttItem> Items_;
+        public IList<GanttItem> Items
+        {
+            get => Items_;
+            set => Items_.Set(value is List<GanttItem> list ? list : value.ToList());
+        }
+
+        private ControlPropertyList<GanttLink> Links_;
+        public IList<GanttLink> Links
+        {
+            get => Links_;
+            set => Links_.Set(value is List<GanttLink> list ? list : value.ToList());
+        }
 
         public int? RowHeight
         {
@@ -125,11 +152,17 @@ namespace FSW.dhtmlx
             set => SetProperty(PropertyName(), value);
         }
 
-
         public GanttScale Scale
         {
             get => (GanttScale)Enum.Parse(typeof(GanttScale), GetProperty<string>(nameof(Scale)));
             set => SetProperty(nameof(Scale), value.ToString());
+        }
+
+        private ControlPropertyList<GanttSubScale> SubScales_;
+        public IList<GanttSubScale> SubScales
+        {
+            get => SubScales_;
+            set => SubScales_.Set(value is List<GanttSubScale> list ? list : value.ToList());
         }
 
         public delegate void OnItemResizedHandler(GanttItem item, DateTime oldStart, int oldDuration);
@@ -145,9 +178,10 @@ namespace FSW.dhtmlx
         {
             base.InitializeProperties();
 
-            Items = new ControlPropertyList<GanttItem>(this, nameof(Items));
-            Links = new ControlPropertyList<GanttLink>(this, nameof(Links));
-            Scale = GanttScale.Default;
+            Items_ = new ControlPropertyList<GanttItem>(this, nameof(Items));
+            Links_ = new ControlPropertyList<GanttLink>(this, nameof(Links));
+            SubScales_ = new ControlPropertyList<GanttSubScale>(this, nameof(SubScales));
+            Scale = GanttScale.Month;
             RowHeight = null;
         }
 
