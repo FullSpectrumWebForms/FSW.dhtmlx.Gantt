@@ -9,6 +9,7 @@ var controls;
                 constructor() {
                     super(...arguments);
                     this.events = [];
+                    this.isInit = false;
                 }
                 // ------------------------------------------------------------------------   Items
                 get Items() {
@@ -22,26 +23,63 @@ var controls;
                 get Scale() {
                     return this.getPropertyValue("Scale");
                 }
+                get SubScales() {
+                    return this.getPropertyValue("SubScales");
+                }
                 get RowHeight() {
                     return this.getPropertyValue("RowHeight");
                 }
                 initialize(type, index, id, properties) {
                     super.initialize(type, index, id, properties);
-                    if (this.Scale == 'Week') {
-                        gantt.config.subscales = [{ unit: 'week', step: 1, date: '%F %d' }];
-                        gantt.config.scale_unit = 'month';
-                        gantt.config.date_scale = '%F';
-                    }
                     if (this.RowHeight)
                         gantt.config.row_height = this.RowHeight;
                     gantt.init(this.element[0]);
                     this.events.push(gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
+                    this.getProperty("Scale").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this), true);
+                    this.getProperty("SubScales").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this), true);
                     this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this));
                     this.getProperty("Links").onChangedFromServer.register(this.onLinksChangedFromServer.bind(this), true);
+                    this.isInit = true;
                 }
                 removeControl() {
                     while (this.events.length)
                         gantt.detachEvent(this.events.pop());
+                }
+                reRender() {
+                    this.reRender();
+                }
+                onScaleChangeFromServer() {
+                    if (this.Scale == 'Month') {
+                        gantt.config.subscales = [{ unit: 'week', step: 1, date: '%F %d' }];
+                        gantt.config.scale_unit = 'month';
+                        gantt.config.date_scale = '%F';
+                    }
+                    else if (this.Scale == 'Week') {
+                        gantt.config.subscales = [{ unit: 'day', step: 1, date: '%D' }];
+                        gantt.config.scale_unit = 'week';
+                        gantt.config.date_scale = '%d';
+                    }
+                    else if (this.Scale == 'Year') {
+                        gantt.config.subscales = [{ unit: 'month', step: 1, date: '%M' }];
+                        gantt.config.scale_unit = 'year';
+                        gantt.config.date_scale = '%Y';
+                    }
+                    // if 0, just keep othe default scale
+                    if (this.SubScales.length > 0) {
+                        gantt.config.subscales = [];
+                        for (let i = 0; i < this.SubScales.length; ++i) {
+                            let subScale = $.extend({}, this.SubScales[i]);
+                            gantt.config.subscales.push(subScale);
+                            if (subScale.unit == 'week')
+                                subScale.date = '%F %d';
+                            else if (subScale.unit == 'day')
+                                subScale.date = '%F %d';
+                            else if (subScale.unit == 'year')
+                                subScale.date = '%F %d';
+                        }
+                    }
+                    if (this.isInit)
+                        this.reRender();
                 }
                 onAfterTaskDrag(id, mode) {
                     var task = gantt.getTask(id);

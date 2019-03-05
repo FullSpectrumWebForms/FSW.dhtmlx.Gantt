@@ -38,6 +38,7 @@ namespace controls.html.dhtmlx {
         get Scale(): string {
             return this.getPropertyValue<this, string>("Scale");
         }
+
         get SubScales(): any[] {
             return this.getPropertyValue<this, any[]>("SubScales");
         }
@@ -61,8 +62,10 @@ namespace controls.html.dhtmlx {
             this.events.push(gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
 
             this.getProperty("Scale").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this), true);
+            this.getProperty("SubScales").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this), true);
             this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this));
             this.getProperty("Links").onChangedFromServer.register(this.onLinksChangedFromServer.bind(this), true);
+            this.isInit = true;
         }
 
         removeControl() {
@@ -71,7 +74,7 @@ namespace controls.html.dhtmlx {
         }
 
         reRender() {
-
+            this.reRender();
         }
 
         onScaleChangeFromServer() {
@@ -82,11 +85,30 @@ namespace controls.html.dhtmlx {
                 gantt.config.date_scale = '%F';
             }
             else if (this.Scale == 'Week') {
-                gantt.config.subscales = [{ unit: 'week', step: 1, date: '%F %d' }];
+                gantt.config.subscales = [{ unit: 'day', step: 1, date: '%D' }];
                 gantt.config.scale_unit = 'week';
-                gantt.config.date_scale = '%F';
+                gantt.config.date_scale = '%d';
             }
-            if( this.isInit )
+            else if (this.Scale == 'Year') {
+                gantt.config.subscales = [{ unit: 'month', step: 1, date: '%M' }];
+                gantt.config.scale_unit = 'year';
+                gantt.config.date_scale = '%Y';
+            }
+            // if 0, just keep othe default scale
+            if (this.SubScales.length > 0) {
+                gantt.config.subscales = [];
+                for (let i = 0; i < this.SubScales.length; ++i) {
+                    let subScale = $.extend({}, this.SubScales[i]);
+                    gantt.config.subscales.push(subScale);
+                    if (subScale.unit == 'week')
+                        subScale.date = '%F %d';
+                    else if (subScale.unit == 'day')
+                        subScale.date = '%F %d';
+                    else if (subScale.unit == 'year')
+                        subScale.date = '%F %d';
+                }
+            }
+            if (this.isInit)
                 this.reRender();
         }
         onAfterTaskDrag(id, mode) {

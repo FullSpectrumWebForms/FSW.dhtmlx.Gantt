@@ -33,7 +33,7 @@ namespace Tests.Pages
             };
 
             int id = 1;
-            TestGantt.Items.Set(Enumerable.Range(0, 2000).SelectMany(x =>
+            TestGantt.Items = Enumerable.Range(0, 2000).SelectMany(x =>
             {
                 return new List<GanttItem>
                 {
@@ -59,8 +59,8 @@ namespace Tests.Pages
                         Parent = project2
                     }
                 };
-            }).ToList());
-            TestGantt.Links.Set(new List<GanttLink>
+            }).ToList();
+            TestGantt.Links = new List<GanttLink>
             {
                 new GanttLink
                 {
@@ -68,7 +68,7 @@ namespace Tests.Pages
                     Source = TestGantt.GetItem(2),
                     Target = TestGantt.GetItem(3)
                 }
-            });
+            };
 
             TestGantt.OnItemResized += TestGantt_OnItemResized;
             TestGantt.OnItemMoved += TestGantt_OnItemMoved;

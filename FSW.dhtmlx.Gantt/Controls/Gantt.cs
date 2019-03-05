@@ -110,13 +110,14 @@ namespace FSW.dhtmlx
     }
     public enum GanttScale
     {
-        Week, Month, Year
+        Day, Week, Month, Year
     }
 
     public class GanttSubScale
     {
         [JsonProperty]
         private string unit = (GanttScale.Week).ToString().ToLower();
+
         [JsonIgnore]
         public GanttScale Unit
         {
@@ -124,6 +125,7 @@ namespace FSW.dhtmlx
             set => unit = value.ToString().ToLower();
         }
 
+        [JsonProperty(PropertyName = "step")]
         public int Step { get; set; }
     }
 
