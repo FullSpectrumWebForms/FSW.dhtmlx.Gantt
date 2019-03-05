@@ -46,7 +46,7 @@ var controls;
                         gantt.detachEvent(this.events.pop());
                 }
                 reRender() {
-                    this.reRender();
+                    gantt.render();
                 }
                 onScaleChangeFromServer() {
                     if (this.Scale == 'Month') {

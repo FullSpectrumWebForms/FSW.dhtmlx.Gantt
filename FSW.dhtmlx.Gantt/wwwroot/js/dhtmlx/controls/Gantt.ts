@@ -74,7 +74,7 @@ namespace controls.html.dhtmlx {
         }
 
         reRender() {
-            this.reRender();
+            gantt.render();
         }
 
         onScaleChangeFromServer() {
