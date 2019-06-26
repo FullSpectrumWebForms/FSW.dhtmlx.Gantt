@@ -64,6 +64,7 @@ namespace FSW.dhtmlx
         [JsonProperty(PropertyName = "editable", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? Editable { get; set; }
     }
+
     public class GanttItem
     {
         [JsonProperty(PropertyName = "id")]
@@ -94,7 +95,10 @@ namespace FSW.dhtmlx
         public bool Open { get; set; }
 
         [JsonProperty]
+#pragma warning disable IDE0052 // Remove unread private members
         private int parent;
+#pragma warning restore IDE0052 // Remove unread private members
+
         [JsonIgnore]
         private GanttItem _Parent;
         [JsonIgnore]
@@ -106,6 +110,15 @@ namespace FSW.dhtmlx
                 _Parent = value;
                 parent = value.Id;
             }
+        }
+
+        [JsonProperty(PropertyName = "color")]
+        private string color;
+        [JsonIgnore]
+        public System.Drawing.Color Color
+        {
+            get => string.IsNullOrEmpty( color ) ? System.Drawing.Color.Empty : System.Drawing.ColorTranslator.FromHtml(color);
+            set => color = value == System.Drawing.Color.Empty ? null : System.Drawing.ColorTranslator.ToHtml(value);
         }
     }
     public enum GanttScale
@@ -164,7 +177,7 @@ namespace FSW.dhtmlx
         public IList<GanttSubScale> SubScales
         {
             get => SubScales_;
-            set => SubScales_.Set(value is List<GanttSubScale> list ? list : value.ToList());
+            set => SubScales_.Set(value as List<GanttSubScale> ?? value.ToList());
         }
 
         public delegate void OnItemResizedHandler(GanttItem item, DateTime oldStart, int oldDuration);
@@ -188,6 +201,7 @@ namespace FSW.dhtmlx
         }
 
         [Core.CoreEvent]
+#pragma warning disable IDE0051 // Remove unused private members
         private void OnItemProgressionChangedFromClient(int id, float progression)
         {
             var item = GetItem(id);
@@ -215,6 +229,7 @@ namespace FSW.dhtmlx
             else if (mode == "move")
                 OnItemMoved?.Invoke(item, oldStart);
         }
+#pragma warning restore IDE0051 // Remove unused private members
 
         public GanttItem GetItem(int id)
         {
