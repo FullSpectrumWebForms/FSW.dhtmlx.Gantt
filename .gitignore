@@ -6,3 +6,7 @@
 /.vs
 /FSW.dhtmlx.Gantt/node_modules/@types
 /FSW.dhtmlx.Gantt/package-lock.json
+/FSW.dhtmlx.Gantt.Standard/bin/Debug
+/FSW.dhtmlx.Gantt.Standard/node_modules/@types
+/FSW.dhtmlx.Gantt.Standard/obj
+/FSW.dhtmlx.Gantt.Standard/package-lock.json

@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using System;
 
-namespace FSW.dhtmlx
+namespace FSW.dhtmlx.Standard
 {
     public class Startup : Core.StartupBase
     {
@@ -21,12 +21,17 @@ namespace FSW.dhtmlx
         {
             RegisterFiles(new[]
             {
-                "wwwroot.js.dhtmlx.controls.Gantt.js",
+                "wwwroot.lib.dhtmlxGantt.dhtmlxgantt.js",
+                "wwwroot.lib.dhtmlxGantt.ext.dhtmlxgantt_smart_rendering.js",
+                "wwwroot.lib.dhtmlxGantt.ext.dhtmlxgantt_tooltip.js",
+                "wwwroot.lib.dhtmlxGantt.dhtmlxgantt.css",
             });
             app.UseStaticFiles(new StaticFileOptions()
             {
-                FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly, "FSW.dhtmlx.wwwroot")
+                FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly, "FSW.Standard.wwwroot")
             });
+
+            ForceCurrentLibToLoadBeforeThis<dhtmlx.Startup>();
         }
     }
 }

@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageId>FSW.dhtmlx.Gantt</PackageId>
-    <Version>1.1.0.6</Version>
+    <PackageId>FSW.dhtmlx.Gantt.Standard</PackageId>
+    <Version>1.0.0.8</Version>
     <Authors>Pascal Arnold</Authors>
     <Company>N/A</Company>
     <PackageTags>FSW dhtmlx gantt</PackageTags>
@@ -16,7 +16,7 @@
     <ApplicationIcon />
     <OutputType>Library</OutputType>
     <StartupObject />
-    <RootNamespace>FSW.dhtmlx</RootNamespace>
+    <RootNamespace>FSW.dhtmlx.Standard</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
@@ -40,6 +40,10 @@
     <EmbeddedResource Include="wwwroot\js\**\*.js" />
     <EmbeddedResource Include="wwwroot\lib\**" />
     <EmbeddedResource Remove="wwwroot\**\*.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FSW.dhtmlx.Gantt\FSW.dhtmlx.Gantt.csproj" />
   </ItemGroup>
   
   <ItemGroup>
