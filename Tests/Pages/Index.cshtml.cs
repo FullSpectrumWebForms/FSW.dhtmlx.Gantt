@@ -12,7 +12,13 @@ namespace Tests.Pages
     public class IndexModel : FSW.Core.FSWPage
     {
 
-        private readonly Gantt TestGantt = new Gantt();
+        public class CustomGanttItem : GanttItem
+        {
+            [GanttColumn]
+            public float CustomCol;
+        }
+
+        private readonly Gantt<CustomGanttItem> TestGantt = new Gantt<CustomGanttItem>();
 
         public override void OnPageLoad()
         {
@@ -21,7 +27,7 @@ namespace Tests.Pages
             //TestGantt.Scale = GanttScale.Week;
             //TestGantt.RowHeight = 20;
 
-            var project2 = new GanttItem
+            var project2 = new CustomGanttItem
             {
                 Id = 1,
                 Text = "Project #2",
@@ -29,16 +35,17 @@ namespace Tests.Pages
                 Duration = 18,
                 Order = 10,
                 Progress = 0.4f,
-                Open = true
+                Open = true,
+                CustomCol = 666
             };
 
             int id = 1;
             TestGantt.Items = Enumerable.Range(0, 2000).SelectMany(x =>
             {
-                return new List<GanttItem>
+                return new List<CustomGanttItem>
                 {
                     project2,
-                    new GanttItem
+                    new CustomGanttItem
                     {
                         Id = ++id,
                         Text = "Task #1",
@@ -46,9 +53,10 @@ namespace Tests.Pages
                         Duration = 8,
                         Order = 10,
                         Progress = 0.6f,
-                        Parent = project2
+                        Parent = project2,
+                        CustomCol = id
                     },
-                    new GanttItem
+                    new CustomGanttItem
                     {
                         Id = ++id,
                         Text = "Task #2",
@@ -56,7 +64,8 @@ namespace Tests.Pages
                         Duration = 8,
                         Order = 20,
                         Progress = 0.6f,
-                        Parent = project2
+                        Parent = project2,
+                        CustomCol = id
                     }
                 };
             }).ToList();
@@ -75,17 +84,17 @@ namespace Tests.Pages
             TestGantt.OnItemProgressDragged += TestGantt_OnItemProgressDragged;
         }
 
-        private void TestGantt_OnItemProgressDragged(GanttItem item, float oldProgress)
+        private void TestGantt_OnItemProgressDragged(CustomGanttItem item, float oldProgress)
         {
             MessageBox.Success($"{item.Id}", $"progression changed to {item.Progress}");
         }
 
-        private void TestGantt_OnItemMoved(GanttItem item, DateTime oldStart)
+        private void TestGantt_OnItemMoved(CustomGanttItem item, DateTime oldStart)
         {
             MessageBox.Success($"{item.Id}", $"{item.StartDate.ToShortDateString()}");
         }
 
-        private void TestGantt_OnItemResized(GanttItem item, DateTime oldStart, int oldDuration)
+        private void TestGantt_OnItemResized(CustomGanttItem item, DateTime oldStart, int oldDuration)
         {
             MessageBox.Success($"{item.Id}", $"{item.StartDate.ToShortDateString()} for {item.Duration} days");
         }

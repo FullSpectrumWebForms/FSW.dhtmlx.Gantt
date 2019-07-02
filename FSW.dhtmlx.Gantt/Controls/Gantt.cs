@@ -117,10 +117,49 @@ namespace FSW.dhtmlx
         [JsonIgnore]
         public System.Drawing.Color Color
         {
-            get => string.IsNullOrEmpty( color ) ? System.Drawing.Color.Empty : System.Drawing.ColorTranslator.FromHtml(color);
+            get => string.IsNullOrEmpty(color) ? System.Drawing.Color.Empty : System.Drawing.ColorTranslator.FromHtml(color);
             set => color = value == System.Drawing.Color.Empty ? null : System.Drawing.ColorTranslator.ToHtml(value);
         }
     }
+    public enum AlignPosition
+    {
+        Left, Center, Right
+    }
+
+    public class GanttColumn
+    {
+        public string Text;
+
+        public string Field;
+
+        public string Width;
+
+        [JsonProperty(PropertyName = nameof(AlignPosition))]
+        private string AlignPosition_ = AlignPosition.Left.ToString().ToLower();
+
+        [JsonIgnore]
+        public AlignPosition AlignPosition
+        {
+            get => (AlignPosition)Enum.Parse(typeof(AlignPosition), AlignPosition_, true);
+            set => AlignPosition_ = value.ToString().ToLower();
+        }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool Tree;
+
+        public bool Resize = true;
+    }
+    public class GanttColumnAttribute: Attribute
+    {
+        public string Text { get; set; }
+
+        public string Width { get; set; }
+
+        public AlignPosition AlignPosition { get; set; } = AlignPosition.Left;
+
+        public bool Resize;
+    }
+
     public enum GanttScale
     {
         Day, Week, Month, Year
@@ -143,15 +182,15 @@ namespace FSW.dhtmlx
     }
 
 
-    public class Gantt : Controls.Html.HtmlControlBase
+    public class Gantt<DataType> : Controls.Html.HtmlControlBase where DataType : GanttItem
     {
         public override string ControlType => "dhtmlx.Gantt";
 
-        private ControlPropertyList<GanttItem> Items_;
-        public IList<GanttItem> Items
+        private ControlPropertyList<DataType> Items_;
+        public IList<DataType> Items
         {
             get => Items_;
-            set => Items_.Set(value is List<GanttItem> list ? list : value.ToList());
+            set => Items_.Set(value is List<DataType> list ? list : value.ToList());
         }
 
         private ControlPropertyList<GanttLink> Links_;
@@ -159,6 +198,13 @@ namespace FSW.dhtmlx
         {
             get => Links_;
             set => Links_.Set(value is List<GanttLink> list ? list : value.ToList());
+        }
+
+        private ControlPropertyDictionary<GanttColumn> Columns_;
+        public IDictionary<string, GanttColumn> Columns
+        {
+            get => Columns_;
+            set => Columns_.Set(value is Dictionary<string, GanttColumn> list ? list : value.ToDictionary(x => x.Key, x => x.Value));
         }
 
         public int? RowHeight
@@ -180,24 +226,70 @@ namespace FSW.dhtmlx
             set => SubScales_.Set(value as List<GanttSubScale> ?? value.ToList());
         }
 
-        public delegate void OnItemResizedHandler(GanttItem item, DateTime oldStart, int oldDuration);
+        public delegate void OnItemResizedHandler(DataType item, DateTime oldStart, int oldDuration);
         public event OnItemResizedHandler OnItemResized;
 
-        public delegate void OnItemMovedHandler(GanttItem item, DateTime oldStart);
+        public delegate void OnItemMovedHandler(DataType item, DateTime oldStart);
         public event OnItemMovedHandler OnItemMoved;
 
-        public delegate void OnItemProgressDraggedHandler(GanttItem item, float oldProgress);
+        public delegate void OnItemProgressDraggedHandler(DataType item, float oldProgress);
         public event OnItemProgressDraggedHandler OnItemProgressDragged;
 
         public override void InitializeProperties()
         {
             base.InitializeProperties();
 
-            Items_ = new ControlPropertyList<GanttItem>(this, nameof(Items));
+            Items_ = new ControlPropertyList<DataType>(this, nameof(Items));
+            Columns_ = new ControlPropertyDictionary<GanttColumn>(this, nameof(Columns));
             Links_ = new ControlPropertyList<GanttLink>(this, nameof(Links));
             SubScales_ = new ControlPropertyList<GanttSubScale>(this, nameof(SubScales));
             Scale = GanttScale.Month;
             RowHeight = null;
+
+            InitializeColumnsFromDataType();
+        }
+
+        private void InitializeColumnsFromDataType()
+        {
+            Columns.AddRange(new Dictionary<string, GanttColumn>
+            {
+                ["Text"] = new GanttColumn()
+                {
+                    Field = "text",
+                    Tree = true,
+                    Text = "Name",
+                    Width = "*"
+                },
+                ["StartDate"] = new GanttColumn()
+                {
+                    Field = "start_date",
+                    Text = "Start"
+                },
+                ["Duration"] = new GanttColumn()
+                {
+                    Field = "duration",
+                    Text = "Duration"
+                },
+            });
+
+            var fields = typeof(DataType).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            foreach( var field in fields )
+            {
+                var attribute = field.GetCustomAttributes(typeof(GanttColumnAttribute), false)?.FirstOrDefault() as GanttColumnAttribute;
+
+                if (attribute == null)
+                    continue;
+
+                Columns[field.Name] = new GanttColumn()
+                {
+                    Field = field.Name,
+                    Resize = attribute.Resize,
+                    Width = attribute.Width,
+                    Text = attribute.Text ?? field.Name,
+                    AlignPosition = attribute.AlignPosition
+                };
+            }
         }
 
         [Core.CoreEvent]
@@ -231,7 +323,7 @@ namespace FSW.dhtmlx
         }
 #pragma warning restore IDE0051 // Remove unused private members
 
-        public GanttItem GetItem(int id)
+        public DataType GetItem(int id)
         {
             for (var i = 0; i < Items.Count; ++i)
             {

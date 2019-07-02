@@ -29,6 +29,20 @@ namespace controls.html.dhtmlx {
         editable?: boolean;
     }
 
+    interface GanttColumn {
+        Text: string;
+
+        Field: string;
+
+        Width: string;
+
+        AlignPosition: 'left' | 'right' | 'center';
+
+        Tree?: boolean;
+
+        Resize: Boolean;
+    }
+
     export class Gantt extends controls.html.htmlControlBase {
 
         // ------------------------------------------------------------------------   Items
@@ -38,6 +52,10 @@ namespace controls.html.dhtmlx {
         // ------------------------------------------------------------------------   Links
         get Links(): GanttLink[] {
             return this.getPropertyValue<this, GanttLink[]>("Links");
+        }
+        // ------------------------------------------------------------------------   Columns
+        get Columns(): { [key: string]: GanttColumn } {
+            return this.getPropertyValue<this, { [key: string]: GanttColumn }>("Columns");
         }
         // ------------------------------------------------------------------------   Items
         get Scale(): string {
@@ -72,6 +90,7 @@ namespace controls.html.dhtmlx {
 
             this.events.push(this.gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
 
+            this.getProperty("Columns").onChangedFromServer.register(this.onColumnsChangedFromServer.bind(this), true);
             this.getProperty("Scale").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this), true);
             this.getProperty("SubScales").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this), true);
             this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this));
@@ -144,10 +163,12 @@ namespace controls.html.dhtmlx {
         }
 
         doParse() {
+
             this.gantt.parse({
                 data: this.Items,
                 links: this.Links
             });
+
         }
 
         onItemsChangedFromServer() {
@@ -155,6 +176,32 @@ namespace controls.html.dhtmlx {
         }
         onLinksChangedFromServer() {
             this.doParse();
+        }
+
+        onColumnsChangedFromServer() {
+
+            let columns = [];
+
+            let columnsFromServer = this.Columns;
+
+            let keys = Object.keys(columnsFromServer);
+            for (let i = 0; i < keys.length; ++i) {
+
+                var col = columnsFromServer[keys[i]];
+                columns.push({
+                    name: col.Field,
+                    label: col.Text,
+                    width: col.Width,
+                    align: col.AlignPosition,
+                    tree: col.Tree,
+                    resize: col.Resize
+                });
+            }
+
+            this.gantt.config.columns = columns;
+
+            if (this.isInit)
+                this.gantt.render();
         }
 
         protected initializeHtmlElement(): void {

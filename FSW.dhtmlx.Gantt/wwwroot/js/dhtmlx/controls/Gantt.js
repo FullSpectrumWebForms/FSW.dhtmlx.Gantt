@@ -24,6 +24,10 @@ var controls;
                 get Links() {
                     return this.getPropertyValue("Links");
                 }
+                // ------------------------------------------------------------------------   Columns
+                get Columns() {
+                    return this.getPropertyValue("Columns");
+                }
                 // ------------------------------------------------------------------------   Items
                 get Scale() {
                     return this.getPropertyValue("Scale");
@@ -44,6 +48,7 @@ var controls;
                         this.gantt.config.row_height = this.RowHeight;
                     this.gantt.init(this.element[0]);
                     this.events.push(this.gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
+                    this.getProperty("Columns").onChangedFromServer.register(this.onColumnsChangedFromServer.bind(this), true);
                     this.getProperty("Scale").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this), true);
                     this.getProperty("SubScales").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this), true);
                     this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this));
@@ -121,6 +126,25 @@ var controls;
                 }
                 onLinksChangedFromServer() {
                     this.doParse();
+                }
+                onColumnsChangedFromServer() {
+                    let columns = [];
+                    let columnsFromServer = this.Columns;
+                    let keys = Object.keys(columnsFromServer);
+                    for (let i = 0; i < keys.length; ++i) {
+                        var col = columnsFromServer[keys[i]];
+                        columns.push({
+                            name: col.Field,
+                            label: col.Text,
+                            width: col.Width,
+                            align: col.AlignPosition,
+                            tree: col.Tree,
+                            resize: col.Resize
+                        });
+                    }
+                    this.gantt.config.columns = columns;
+                    if (this.isInit)
+                        this.gantt.render();
                 }
                 initializeHtmlElement() {
                     this.element = $('<div></div>');
