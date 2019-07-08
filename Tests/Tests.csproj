@@ -9,12 +9,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FSW.dhtmlx.Gantt.Enterprise" Version="1.0.2.4" />
     <PackageReference Include="FSW.Semantic" Version="2.0.2.2" />
     <PackageReference Include="Microsoft.AspNetCore.Antiforgery" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FSW.dhtmlx.Gantt.Standard\FSW.dhtmlx.Gantt.Standard.csproj" />
+    <ProjectReference Include="..\FSW.dhtmlx.Gantt\FSW.dhtmlx.Gantt.csproj" />
   </ItemGroup>
 
 </Project>

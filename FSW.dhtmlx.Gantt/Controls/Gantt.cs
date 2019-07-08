@@ -65,6 +65,33 @@ namespace FSW.dhtmlx
         public bool? Editable { get; set; }
     }
 
+    public class GanttResource
+    {
+        [JsonProperty(PropertyName = "id")]
+        public int Id { get; set; }
+
+        [JsonProperty(PropertyName = "text")]
+        public string Name { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+#pragma warning disable IDE0052 // Remove unread private members
+        private int? parent;
+#pragma warning restore IDE0052 // Remove unread private members
+
+        [JsonIgnore]
+        private GanttResource _Parent;
+        [JsonIgnore]
+        public GanttResource Parent
+        {
+            get => _Parent;
+            set
+            {
+                _Parent = value;
+                parent = value?.Id;
+            }
+        }
+    }
+
     public class GanttItem
     {
         [JsonProperty(PropertyName = "id")]
@@ -74,16 +101,16 @@ namespace FSW.dhtmlx
         public string Text { get; set; }
 
         [JsonProperty(PropertyName = "start_date")]
-        private string _StartDate;
+        protected string _StartDate;
         [JsonIgnore]
-        public DateTime StartDate
+        public DateTime? StartDate
         {
-            get => DateTime.ParseExact(_StartDate, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-            set => _StartDate = value.ToString("dd-MM-yyyy");
+            get => _StartDate == null ? null : (DateTime?)DateTime.ParseExact(_StartDate, "dd-MM-yyyy", CultureInfo.InvariantCulture);
+            set => _StartDate = value?.ToString("dd-MM-yyyy");
         }
 
         [JsonProperty(PropertyName = "duration")]
-        public int Duration { get; set; }
+        public int? Duration { get; set; }
 
         [JsonProperty(PropertyName = "order")]
         public int Order { get; set; }
@@ -94,13 +121,13 @@ namespace FSW.dhtmlx
         [JsonProperty(PropertyName = "open")]
         public bool Open { get; set; }
 
-        [JsonProperty]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
 #pragma warning disable IDE0052 // Remove unread private members
-        private int parent;
+        private int? parent;
 #pragma warning restore IDE0052 // Remove unread private members
 
         [JsonIgnore]
-        private GanttItem _Parent;
+        protected GanttItem _Parent;
         [JsonIgnore]
         public GanttItem Parent
         {
@@ -108,18 +135,33 @@ namespace FSW.dhtmlx
             set
             {
                 _Parent = value;
-                parent = value.Id;
+                parent = value?.Id;
             }
         }
 
-        [JsonProperty(PropertyName = "color")]
-        private string color;
+        [JsonProperty(PropertyName = "color", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        protected string color;
         [JsonIgnore]
         public System.Drawing.Color Color
         {
             get => string.IsNullOrEmpty(color) ? System.Drawing.Color.Empty : System.Drawing.ColorTranslator.FromHtml(color);
             set => color = value == System.Drawing.Color.Empty ? null : System.Drawing.ColorTranslator.ToHtml(value);
         }
+
+        /// <summary>
+        /// Cannot be used with GridColor, GridColor will override
+        /// </summary>
+        [JsonProperty(PropertyName = "GridCssClass", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string GridCssClass { get; set; }
+
+        /// <summary>
+        /// Only available if OverrideGridCssWithGridColor is true
+        /// </summary>
+        [JsonIgnore]
+        public System.Drawing.Color GridColor { get; set; }
+
+        [JsonProperty(PropertyName = "readonly", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool ReadOnly { get; set; }
     }
     public enum AlignPosition
     {
@@ -148,8 +190,10 @@ namespace FSW.dhtmlx
         public bool Tree;
 
         public bool Resize = true;
+
+        public int Order;
     }
-    public class GanttColumnAttribute: Attribute
+    public class GanttColumnAttribute : Attribute
     {
         public string Text { get; set; }
 
@@ -157,7 +201,42 @@ namespace FSW.dhtmlx
 
         public AlignPosition AlignPosition { get; set; } = AlignPosition.Left;
 
-        public bool Resize;
+        public bool Resize { get; set; } = true;
+
+        public int Order { get; set; }
+    }
+
+    public class GanttResourceTaskLink
+    {
+#pragma warning disable IDE0052 // Remove unread private members
+
+        [JsonProperty]
+        private int resource_id;
+        private GanttResource Resource_;
+        public GanttResource Resource
+        {
+            get => Resource_;
+            set
+            {
+                Resource_ = value;
+                resource_id = value.Id;
+            }
+        }
+
+        [JsonProperty]
+        private double value;
+        public TimeSpan Work
+        {
+            get => TimeSpan.FromHours(value);
+            set => this.value = value.TotalHours;
+        }
+
+#pragma warning restore IDE0052 // Remove unread private members
+    }
+
+    public interface IGanttTaskWithResources
+    {
+        List<GanttResourceTaskLink> Resources { get; set; }
     }
 
     public enum GanttScale
@@ -207,9 +286,34 @@ namespace FSW.dhtmlx
             set => Columns_.Set(value is Dictionary<string, GanttColumn> list ? list : value.ToDictionary(x => x.Key, x => x.Value));
         }
 
+        private ControlPropertyList<GanttResource> ResourceStore_;
+        public IList<GanttResource> ResourceStore
+        {
+            get => ResourceStore_;
+            set => ResourceStore_.Set(value is List<GanttResource> list ? list : value.ToList());
+        }
+
         public int? RowHeight
         {
             get => GetProperty<int?>(PropertyName());
+            set => SetProperty(PropertyName(), value);
+        }
+
+        public int GridWidth
+        {
+            get => GetProperty<int>(PropertyName());
+            set => SetProperty(PropertyName(), value);
+        }
+
+        public bool Editable
+        {
+            get => GetProperty<bool>(PropertyName());
+            set => SetProperty(PropertyName(), value);
+        }
+
+        public bool ShowResourceSection
+        {
+            get => GetProperty<bool>(PropertyName());
             set => SetProperty(PropertyName(), value);
         }
 
@@ -226,6 +330,8 @@ namespace FSW.dhtmlx
             set => SubScales_.Set(value as List<GanttSubScale> ?? value.ToList());
         }
 
+        public bool OverrideGridCssWithGridColor { get; set; } = false;
+
         public delegate void OnItemResizedHandler(DataType item, DateTime oldStart, int oldDuration);
         public event OnItemResizedHandler OnItemResized;
 
@@ -235,6 +341,10 @@ namespace FSW.dhtmlx
         public delegate void OnItemProgressDraggedHandler(DataType item, float oldProgress);
         public event OnItemProgressDraggedHandler OnItemProgressDragged;
 
+        public delegate void OnTaskDoubleClickedHandler(DataType task);
+        public event OnTaskDoubleClickedHandler OnTaskDoubleClicked;
+
+
         public override void InitializeProperties()
         {
             base.InitializeProperties();
@@ -242,11 +352,53 @@ namespace FSW.dhtmlx
             Items_ = new ControlPropertyList<DataType>(this, nameof(Items));
             Columns_ = new ControlPropertyDictionary<GanttColumn>(this, nameof(Columns));
             Links_ = new ControlPropertyList<GanttLink>(this, nameof(Links));
+            ResourceStore_ = new ControlPropertyList<GanttResource>(this, nameof(ResourceStore));
             SubScales_ = new ControlPropertyList<GanttSubScale>(this, nameof(SubScales));
             Scale = GanttScale.Month;
+            Editable = false;
+            ShowResourceSection = typeof(DataType).GetInterface(nameof(IGanttTaskWithResources), false) != null;
             RowHeight = null;
+            GridWidth = 360; // default value of dhtmlx
 
             InitializeColumnsFromDataType();
+
+            GetPropertyInternal(nameof(Items)).OnInstantNewValue += Gantt_OnItemsChanged;
+        }
+
+        protected override void ControlInitialized()
+        {
+            base.ControlInitialized();
+
+            InternalStyles["." + Id + "_disp_none"] = new Dictionary<string, string>
+            {
+                ["display"] = "none !important"
+            };
+        }
+
+        private Dictionary<System.Drawing.Color, int> AlreadyUsedGridColors = new Dictionary<System.Drawing.Color, int>();
+        private void Gantt_OnItemsChanged(Core.Property property, object lastValue, object newValue, Core.Property.UpdateSource source)
+        {
+            if (OverrideGridCssWithGridColor && source == Core.Property.UpdateSource.Server)
+            {
+                foreach (var item in Items)
+                {
+                    if (item.GridColor != System.Drawing.Color.Empty)
+                    {
+                        if (!AlreadyUsedGridColors.TryGetValue(item.GridColor, out var index))
+                        {
+                            index = AlreadyUsedGridColors.Count;
+                            AlreadyUsedGridColors.Add(item.GridColor, index);
+
+                            InternalStyles["." + Id + "_color_" + index] = new Dictionary<string, string>
+                            {
+                                ["background-color"] = System.Drawing.ColorTranslator.ToHtml(item.GridColor)
+                            };
+                        }
+
+                        item.GridCssClass = Id + "_color_" + index;
+                    }
+                }
+            }
         }
 
         private void InitializeColumnsFromDataType()
@@ -258,23 +410,31 @@ namespace FSW.dhtmlx
                     Field = "text",
                     Tree = true,
                     Text = "Name",
-                    Width = "*"
+                    Width = "*",
+                    Order = 0
                 },
                 ["StartDate"] = new GanttColumn()
                 {
                     Field = "start_date",
-                    Text = "Start"
+                    Text = "Start",
+                    Order = 1,
+                    Width = "100",
                 },
                 ["Duration"] = new GanttColumn()
                 {
                     Field = "duration",
-                    Text = "Duration"
+                    Text = "Duration",
+                    Width = "100",
+                    Order = 2
                 },
             });
 
-            var fields = typeof(DataType).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var fields = typeof(DataType)
+                .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .OfType<System.Reflection.MemberInfo>()
+                .Concat(typeof(DataType).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance));
 
-            foreach( var field in fields )
+            foreach (var field in fields)
             {
                 var attribute = field.GetCustomAttributes(typeof(GanttColumnAttribute), false)?.FirstOrDefault() as GanttColumnAttribute;
 
@@ -287,13 +447,21 @@ namespace FSW.dhtmlx
                     Resize = attribute.Resize,
                     Width = attribute.Width,
                     Text = attribute.Text ?? field.Name,
-                    AlignPosition = attribute.AlignPosition
+                    AlignPosition = attribute.AlignPosition,
+                    Order = attribute.Order
                 };
             }
         }
 
-        [Core.CoreEvent]
 #pragma warning disable IDE0051 // Remove unused private members
+        [Core.CoreEvent]
+        private void OnTaskDoubleClickedFromClient(int id)
+        {
+            var item = GetItem(id);
+
+            OnTaskDoubleClicked?.Invoke(item);
+        }
+        [Core.CoreEvent]
         private void OnItemProgressionChangedFromClient(int id, float progression)
         {
             var item = GetItem(id);
@@ -314,12 +482,12 @@ namespace FSW.dhtmlx
             {
                 var oldDuration = item.Duration;
                 var end = DateTime.ParseExact(newEnd, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-                item.Duration = (int)(end - item.StartDate).TotalDays;
+                item.Duration = (int)(end - item.StartDate)?.TotalDays;
 
-                OnItemResized?.Invoke(item, oldStart, oldDuration);
+                OnItemResized?.Invoke(item, oldStart.Value, oldDuration.Value);
             }
             else if (mode == "move")
-                OnItemMoved?.Invoke(item, oldStart);
+                OnItemMoved?.Invoke(item, oldStart.Value);
         }
 #pragma warning restore IDE0051 // Remove unused private members
 
