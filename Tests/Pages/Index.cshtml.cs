@@ -26,9 +26,8 @@ namespace Tests.Pages
         {
             base.OnPageLoad();
 
-            //TestGantt.Scale = GanttScale.Week;
+            TestGantt.Scale = GanttScale.Day;
             //TestGantt.RowHeight = 20;
-
 
             TestGantt.ResourceStore = new[]
             {
@@ -49,73 +48,44 @@ namespace Tests.Pages
                 }
             };
 
-            var project2 = new CustomGanttItem
-            {
-                Id = 1,
-                Color = Color.LightGreen,
-                Text = "Project #2",
-                StartDate = DateTime.Today,
-                Duration = 18,
-                Order = 10,
-                Progress = 0.4f,
-                Open = true,
-                CustomCol = 666
-            };
-
             int id = 1;
-            TestGantt.Items = new[] { project2 }.Concat( Enumerable.Range(0, 10).SelectMany(_ =>
+            TestGantt.Items = new[]
             {
-                return new List<CustomGanttItem>
+                new CustomGanttItem()
                 {
-                    new CustomGanttItem
+                    Id = ++id,
+                    CustomCol = 10,
+                    Duration = 5,
+                    Progress = 40,
+                    Order = id,
+                    Open = true,
+                    Text = "Task 1",
+                    ReadOnly = true,
+                    StartDate = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 1 ),
+                    Resources = new List<GanttResourceTaskLink>
                     {
-                        Id = ++id,
-                        Text = "Task #1",
-                        StartDate = DateTime.Today.Add(TimeSpan.FromDays(1)),
-                        Color = System.Drawing.Color.Red,
-                        Duration = 8,
-                        Order = 10,
-                        Progress = 0.6f,
-                        Parent = project2,
-                        CustomCol = id,
-                        Resources = new List<GanttResourceTaskLink>()
+                        new GanttResourceTaskLink()
                         {
-                            new GanttResourceTaskLink()
-                            {
-                                Resource = TestGantt.ResourceStore.First( x => x.Id == 1 ),
-                                Work = TimeSpan.FromHours(32)
-                            }
-                        }
-                    },
-                    new CustomGanttItem
-                    {
-                        Id = ++id,
-                        Text = "Task #2",
-                        StartDate = DateTime.Today.Add(TimeSpan.FromDays(5)),
-                        Duration = 8,
-                        Order = 20,
-                        Progress = 0.6f,
-                        Parent = project2,
-                        CustomCol = id
-                    },
-                    new CustomGanttItem
-                    {
-                        Id = ++id,
-                        Text = "Task #3",
-                        Order = 20,
-                        Parent = project2,
-                        CustomCol = id,
-                        Color = System.Drawing.Color.Transparent
+                            Resource = TestGantt.ResourceStore.First( x=> x.Id == 1 ),
+                            Start = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 2 ),
+                            Finish = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 3 ),
+                            Work = TimeSpan.FromHours(8)
+                        },
+                        new GanttResourceTaskLink()
+                        {
+                            Resource = TestGantt.ResourceStore.First( x=> x.Id == 1 ),
+                            Start = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 3 ),
+                            Finish = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 4 ),
+                            Work = TimeSpan.FromHours(8)
+                        },
+                        new GanttResourceTaskLink()
+                        {
+                            Resource = TestGantt.ResourceStore.First( x=> x.Id == 1 ),
+                            Start = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 4 ),
+                            Finish = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 5 ),
+                            Work = TimeSpan.FromHours(4)
+                        },
                     }
-                };
-            })).ToList();
-            TestGantt.Links = new List<GanttLink>
-            {
-                new GanttLink
-                {
-                    Id = 1,
-                    Source = TestGantt.GetItem(2),
-                    Target = TestGantt.GetItem(3)
                 }
             };
 

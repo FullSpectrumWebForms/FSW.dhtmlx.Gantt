@@ -231,6 +231,24 @@ namespace FSW.dhtmlx
             set => this.value = value.TotalHours;
         }
 
+        [JsonProperty(PropertyName = "Start")]
+        protected string _Start;
+        [JsonIgnore]
+        public DateTime? Start
+        {
+            get => _Start == null ? null : (DateTime?)DateTime.ParseExact(_Start, "dd-MM-yyyy", CultureInfo.InvariantCulture);
+            set => _Start = value?.ToString("dd-MM-yyyy");
+        }
+
+        [JsonProperty(PropertyName = "Finish")]
+        protected string _Finish;
+        [JsonIgnore]
+        public DateTime? Finish
+        {
+            get => _Finish == null ? null : (DateTime?)DateTime.ParseExact(_Finish, "dd-MM-yyyy", CultureInfo.InvariantCulture);
+            set => _Finish = value?.ToString("dd-MM-yyyy");
+        }
+
 #pragma warning restore IDE0052 // Remove unread private members
     }
 
