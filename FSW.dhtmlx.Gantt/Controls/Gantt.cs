@@ -213,6 +213,7 @@ namespace FSW.dhtmlx
         [JsonProperty]
         private int resource_id;
         private GanttResource Resource_;
+        [JsonIgnore]
         public GanttResource Resource
         {
             get => Resource_;

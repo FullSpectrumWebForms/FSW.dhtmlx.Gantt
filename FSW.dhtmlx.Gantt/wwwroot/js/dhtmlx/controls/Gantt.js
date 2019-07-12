@@ -16,6 +16,7 @@ var controls;
                     this.events = [];
                     this.isInit = false;
                     this.isPro = false;
+                    this.workBuffer = {};
                 }
                 // ------------------------------------------------------------------------   Items
                 get Items() {
@@ -67,31 +68,43 @@ var controls;
                     this.events.push(this.gantt.attachEvent("onTaskDblClick", this.onTaskDoubleClicked.bind(this)));
                     this.events.push(this.gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
                     if (this.ShowResourceSection && this.isPro) {
-                        let computeWork = function (resource, tasks_, start, end) {
-                            let tasks = [];
-                            for (let i = 0; i < tasks_.length; ++i) {
-                                if (!tasks.find(x => x.Id == tasks_[i].Id)) {
-                                    tasks.push(tasks_[i]);
+                        let computeWork = function (resource, start, end) {
+                            let startStr;
+                            if (start && end) {
+                                startStr = start.toLocaleDateString();
+                                let buffer = that.workBuffer[resource.id];
+                                if (buffer) {
+                                    let work = buffer[startStr];
+                                    if (work || work == 0)
+                                        return work;
                                 }
+                                end = moment(start).add(that.gantt.config.subscales[0].step, that.gantt.config.subscales[0].unit).toDate();
                             }
+                            var tasks = that.Items;
                             var totalWork = 0;
                             for (var i = 0; i < tasks.length; i++) {
                                 let task = tasks[i];
-                                for (let j = 0; j < task.Resources.length; ++j) {
+                                for (let j = 0; j < (task.Resources || []).length; ++j) {
                                     let cResource = task.Resources[j];
                                     if (cResource.resource_id == resource.id) {
-                                        if (((start && end) && (moment(cResource.StartParsed).isBetween(start, end) ||
-                                            moment(cResource.FinishParsed).isBetween(start, end) ||
-                                            moment(cResource.StartParsed).isSame(start) ||
-                                            moment(cResource.FinishParsed).isSame(end))) || !(start && end)) {
+                                        let s = moment(cResource.StartParsed);
+                                        let f = moment(cResource.FinishParsed);
+                                        if (((start && end) && (s.isBetween(start, end) ||
+                                            f.isBetween(start, end) ||
+                                            s.isSame(start) ||
+                                            s.isSame(end))) || !(start && end)) {
                                             totalWork += cResource.value;
                                         }
                                     }
                                 }
                             }
-                            return {
-                                totalWork: totalWork
-                            };
+                            if (start && end) {
+                                let buffer = that.workBuffer[resource.id];
+                                if (!buffer)
+                                    buffer = that.workBuffer[resource.id] = {};
+                                buffer[startStr] = totalWork;
+                            }
+                            return totalWork;
                         };
                         this.gantt.config.resource_property = 'Resources';
                         this.gantt.config.resource_store = "resource";
@@ -105,26 +118,22 @@ var controls;
                                 },
                                 {
                                     name: "workload", label: "Workload", template: function (resource) {
-                                        var tasks;
-                                        var store = that.gantt.getDatastore(that.gantt.config.resource_store), field = that.gantt.config.resource_property;
-                                        if (store.hasChild(resource.id)) {
-                                            tasks = that.gantt.getTaskBy(field, store.getChildren(resource.id));
-                                        }
-                                        else {
-                                            tasks = that.gantt.getTaskBy(field, resource.id);
-                                        }
-                                        var totalWork = computeWork(resource, tasks).totalWork;
+                                        var totalWork = computeWork(resource);
                                         return (Math.round((totalWork * 10) || 0) / 10) + "h";
                                     }
                                 }
                             ]
                         };
                         this.gantt.templates.resource_cell_value = function (start_date, end_date, resource, tasks) {
-                            let totalWork = computeWork(resource, tasks, start_date, end_date).totalWork;
-                            return "<div>" + (Math.round(totalWork * 10) / 10) + "</div>";
+                            let totalWork = computeWork(resource, start_date, end_date);
+                            let res = (Math.round(totalWork * 10) / 10);
+                            if (res == 0)
+                                return '';
+                            else
+                                return "<div>" + res + "</div>";
                         };
                         this.gantt.templates.resource_cell_class = function (start_date, end_date, resource, tasks) {
-                            let totalWork = computeWork(resource, tasks, start_date, end_date).totalWork;
+                            let totalWork = computeWork(resource, start_date, end_date);
                             let nbDays = moment.duration(moment(end_date).diff(moment(start_date))).asDays();
                             let totalWorkPerDay = totalWork / nbDays;
                             var css = [];
@@ -254,6 +263,7 @@ var controls;
                     }
                 }
                 doParse() {
+                    this.workBuffer = {};
                     for (let i = 0; i < this.Items.length; ++i) {
                         let item = this.Items[i];
                         if (item.Resources) {
@@ -287,6 +297,7 @@ var controls;
                 onResourceStoreChangedFromServer() {
                     var store = this.gantt.getDatastore(gantt.config.resource_store);
                     store.parse(this.ResourceStore);
+                    this.workBuffer = {};
                     this.gantt.render();
                 }
                 onTaskDoubleClicked(id) {
