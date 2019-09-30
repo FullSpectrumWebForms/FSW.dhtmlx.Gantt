@@ -24,6 +24,7 @@ namespace controls.html.dhtmlx {
         GridCssClass: string;
         readonly: boolean;
         Resources?: GanttResourceTaskLink[];
+        type: string;
     }
 
     interface GanttLink {
@@ -187,7 +188,12 @@ namespace controls.html.dhtmlx {
                     return totalWork;
                 };
 
-
+                this.gantt.templates.rightside_text = function (start, end, task) {
+                    if (task.type == gantt.config.types.milestone) {
+                        return task.text;
+                    }
+                    return "";
+                };
                 this.gantt.config.resource_property = 'Resources';
                 this.gantt.config.resource_store = "resource";
                 this.gantt.config.order_branch = true;
@@ -199,7 +205,7 @@ namespace controls.html.dhtmlx {
                             }
                         },
                         {
-                            name: "workload", label: "Workload", template: function (resource) {
+                            name: "workload", label: "Workload", align: "right", template: function (resource) {
 
                                 var totalWork = computeWork(resource);
 

@@ -14,6 +14,14 @@ namespace FSW.dhtmlx
     {
         FinishToStart = 0, StartToStart = 1, FinishToFinish = 2, StartToFinish = 3
     }
+    public enum GanttTaskType
+    {
+        Task,
+        Project,
+        Milestone,
+        Placeholder
+    }
+
     public class GanttLink
     {
         [JsonProperty(PropertyName = "id")]
@@ -136,6 +144,20 @@ namespace FSW.dhtmlx
             {
                 _Parent = value;
                 parent = value?.Id;
+            }
+        }
+
+        [JsonProperty]
+        private string type = ((int)GanttTaskType.Task).ToString();
+        [JsonIgnore]
+        public GanttTaskType Type
+        {
+            get => (GanttTaskType)Enum.Parse(typeof(GanttTaskType), type, true);
+            set
+            {
+                var str = value.ToString();
+                str = str.Substring(0, 1).ToLower() + str.Substring(1);
+                type = str;
             }
         }
 

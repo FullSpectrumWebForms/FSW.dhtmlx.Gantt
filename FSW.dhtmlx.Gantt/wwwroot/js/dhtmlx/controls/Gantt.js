@@ -106,6 +106,12 @@ var controls;
                             }
                             return totalWork;
                         };
+                        this.gantt.templates.rightside_text = function (start, end, task) {
+                            if (task.type == gantt.config.types.milestone) {
+                                return task.text;
+                            }
+                            return "";
+                        };
                         this.gantt.config.resource_property = 'Resources';
                         this.gantt.config.resource_store = "resource";
                         this.gantt.config.order_branch = true;
@@ -117,7 +123,7 @@ var controls;
                                     }
                                 },
                                 {
-                                    name: "workload", label: "Workload", template: function (resource) {
+                                    name: "workload", label: "Workload", align: "right", template: function (resource) {
                                         var totalWork = computeWork(resource);
                                         return (Math.round((totalWork * 10) || 0) / 10) + "h";
                                     }
