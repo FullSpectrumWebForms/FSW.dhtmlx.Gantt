@@ -118,6 +118,8 @@ namespace controls.html.dhtmlx {
         isPro = false;
 
         workBuffer: { [id: number]: { [date: string]: number } } = {};
+        selectedTaskResource: GanttResource[];
+        allResourceDic: { [id: string]: GanttResource } = {};
         initialize(type: string, index: number, id: string, properties: { property: string, value: any }[]) {
             super.initialize(type, index, id, properties);
             let that = this;
@@ -136,6 +138,7 @@ namespace controls.html.dhtmlx {
 
 
             this.events.push(this.gantt.attachEvent("onTaskDblClick", this.onTaskDoubleClicked.bind(this)));
+            this.events.push(this.gantt.attachEvent("onTaskClick", this.onTaskClicked.bind(this)));
 
             this.events.push(this.gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
 
@@ -154,34 +157,34 @@ namespace controls.html.dhtmlx {
                         }
                         end = moment(start).add(that.gantt.config.subscales[0].step, that.gantt.config.subscales[0].unit).toDate();
                     }
-                    var tasks = that.Items;
+
+                    var taskId = that.gantt.getSelectedId();
+                    if (!taskId)
+                        return 0;
+                    let task = that.gantt.getTask(taskId);
 
                     var totalWork = 0;
-                    for (var i = 0; i < tasks.length; i++) {
+                    for (let j = 0; j < (task.Resources || []).length; ++j) {
+                        let cResource = task.Resources[j];
+                        if (cResource.resource_id == resource.id) {
+                            let s = (start && end) ? moment(cResource.StartParsed) : null;
+                            let f = (start && end) ? moment(cResource.FinishParsed) : null;
+                            if (((start && end) && (
+                                s.isBetween(start, end) ||
+                                f.isBetween(start, end) ||
+                                s.isSame(start) ||
+                                s.isSame(end))) || !(start && end)) {
 
-                        let task = tasks[i];
-                        for (let j = 0; j < (task.Resources || []).length; ++j) {
-                            let cResource = task.Resources[j];
-                            if (cResource.resource_id == resource.id) {
-                                let s = moment(cResource.StartParsed);
-                                let f = moment(cResource.FinishParsed);
-                                if (((start && end) && (
-                                    s.isBetween(start, end) ||
-                                    f.isBetween(start, end) ||
-                                    s.isSame(start) ||
-                                    s.isSame(end))) || !(start && end)) {
-
-                                    totalWork += cResource.value;
-                                }
+                                totalWork += cResource.value;
                             }
                         }
                     }
 
                     if (start && end) {
                         let buffer = that.workBuffer[resource.id];
-                        if (!buffer) 
+                        if (!buffer)
                             buffer = that.workBuffer[resource.id] = {};
-                        
+
                         buffer[startStr] = totalWork;
                     }
 
@@ -235,11 +238,11 @@ namespace controls.html.dhtmlx {
 
                     var css = [];
                     css.push("resource_marker");
-                    if (totalWorkPerDay <= 8) {
-                        css.push("workday_ok");
-                    } else {
-                        css.push("workday_over");
-                    }
+                    //if (totalWorkPerDay <= 8) {
+                    css.push("workday_ok");
+                    //} else {
+                    //    css.push("workday_over");
+                    //}
                     return css.join(" ");
                 };
 
@@ -405,17 +408,48 @@ namespace controls.html.dhtmlx {
             this.gantt.render();
         }
         onResourceStoreChangedFromServer() {
-            var store = this.gantt.getDatastore(gantt.config.resource_store);
-            store.parse(this.ResourceStore);
 
-            this.workBuffer = {};
+            this.allResourceDic = {};
+            for (let i = 0; i < this.ResourceStore.length; ++i) {
+                let resource = this.ResourceStore[i];
+                this.allResourceDic[resource.id] = resource;
+            }
+
+            this.onTaskClicked(this.gantt.getSelectedId());
 
             this.gantt.render();
         }
 
         onTaskDoubleClicked(id) {
+            this.workBuffer = {};
             if (id)
                 this.customControlEvent('OnTaskDoubleClickedFromClient', { id });
+        }
+
+        onTaskClicked(id: string) {
+            this.workBuffer = {};
+            if (id) {
+                this.customControlEvent('OnTaskClickedFromClient', { id });
+
+                let task = this.gantt.getTask(id);
+
+                let allResources: GanttResource[] = [];
+                for (let i = 0; i < task.Resources.length; ++i)
+                    allResources.push(this.allResourceDic[task.Resources[i].resource_id]);
+                this.selectedTaskResource = allResources;
+            }
+            else
+                this.selectedTaskResource = this.ResourceStore;
+
+            var store = this.gantt.getDatastore(gantt.config.resource_store);
+
+            store.clearAll();
+            let that = this;
+            setTimeout(function () {
+                store.parse(that.selectedTaskResource);
+            }, 1);
+
+            return true;
         }
 
         onColumnsChangedFromServer() {

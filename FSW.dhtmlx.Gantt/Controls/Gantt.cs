@@ -385,6 +385,9 @@ namespace FSW.dhtmlx
         public delegate void OnTaskDoubleClickedHandler(DataType task);
         public event OnTaskDoubleClickedHandler OnTaskDoubleClicked;
 
+        public delegate void OnTaskDoubleHandler(DataType task);
+        public event OnTaskDoubleHandler OnTaskClicked;
+
 
         public override void InitializeProperties()
         {
@@ -501,6 +504,13 @@ namespace FSW.dhtmlx
             var item = GetItem(id);
 
             OnTaskDoubleClicked?.Invoke(item);
+        }
+        [Core.CoreEvent]
+        private void OnTaskClickedFromClient(int id)
+        {
+            var item = GetItem(id);
+
+            OnTaskClicked?.Invoke(item);
         }
         [Core.CoreEvent]
         private void OnItemProgressionChangedFromClient(int id, float progression)
