@@ -215,6 +215,7 @@ namespace FSW.dhtmlx
 
         public int Order;
     }
+
     public class GanttColumnAttribute : Attribute
     {
         public string Text { get; set; }
@@ -270,6 +271,15 @@ namespace FSW.dhtmlx
         {
             get => _Finish == null ? null : (DateTime?)DateTime.ParseExact(_Finish, "dd-MM-yyyy", CultureInfo.InvariantCulture);
             set => _Finish = value?.ToString("dd-MM-yyyy");
+        }
+
+        [JsonProperty(PropertyName = nameof(TotalWork))]
+        private double TotalWork_;
+        [JsonIgnore]
+        public TimeSpan TotalWork
+        {
+            get => TimeSpan.FromHours(TotalWork_);
+            set => this.TotalWork_ = value.TotalHours;
         }
 
 #pragma warning restore IDE0052 // Remove unread private members

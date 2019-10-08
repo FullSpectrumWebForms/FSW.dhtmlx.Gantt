@@ -69,6 +69,8 @@ namespace controls.html.dhtmlx {
 
         FinishParsed?: Date;
         Finish: string;
+
+        TotalWork: number;
     }
 
     export class Gantt extends controls.html.htmlControlBase {
@@ -172,8 +174,7 @@ namespace controls.html.dhtmlx {
                             if (((start && end) && (
                                 s.isBetween(start, end) ||
                                 f.isBetween(start, end) ||
-                                s.isSame(start) ||
-                                s.isSame(end))) || !(start && end)) {
+                                s.isSame(start))) || !(start && end)) {
 
                                 totalWork += cResource.value;
                             }
@@ -200,6 +201,34 @@ namespace controls.html.dhtmlx {
                 this.gantt.config.resource_property = 'Resources';
                 this.gantt.config.resource_store = "resource";
                 this.gantt.config.order_branch = true;
+
+                let calcStartEnd = function (resources: GanttResourceTaskLink[]) {
+
+                    let min: Date;
+                    let max: Date;
+                    let sumTotal = 0;
+                    let sumRemaining = 0;
+
+                    for (let i = 0; i < resources.length; ++i) {
+                        let start = moment(resources[i].StartParsed);
+                        let end = moment(resources[i].FinishParsed);
+                        if (!min || start < min)
+                            min = start;
+                        if (!max || end > max)
+                            max = end;
+
+                        sumRemaining += resources[i].value;
+                        sumTotal += resources[i].TotalWork;
+                    }
+
+                    return {
+                        min,
+                        max,
+                        sumRemaining,
+                        sumTotal
+                    };
+                }
+
                 var resourceConfig = {
                     columns: [
                         {
@@ -208,11 +237,69 @@ namespace controls.html.dhtmlx {
                             }
                         },
                         {
-                            name: "workload", label: "Workload", align: "right", template: function (resource) {
+                            name: 'start', label: 'Début', align: "right", width: 80, template: function (resource: GanttResource) {
+                                let taskId = that.gantt.getSelectedId();
+                                if (!taskId)
+                                    return '';
+                                let task: GanttItem = that.gantt.getTask(taskId);
 
-                                var totalWork = computeWork(resource);
+                                let resources = task.Resources;
 
-                                return (Math.round((totalWork * 10) || 0) / 10) + "h";
+                                return moment(calcStartEnd(resources).min).format('YYYY-MM-DD');
+                            }
+                        },
+                        {
+                            name: 'end', label: 'Fin', align: "right", width: 80, template: function (resource: GanttResource) {
+                                let taskId = that.gantt.getSelectedId();
+                                if (!taskId)
+                                    return '';
+                                let task: GanttItem = that.gantt.getTask(taskId);
+
+                                let resources = task.Resources;
+
+                                return moment(calcStartEnd(resources).max).format('YYYY-MM-DD');
+                            }
+                        },
+                        {
+                            name: 'progression', label: '% W. Compl.', align: "right", width: 70, template: function (resource: GanttResource) {
+                                let taskId = that.gantt.getSelectedId();
+                                if (!taskId)
+                                    return '';
+                                let task: GanttItem = that.gantt.getTask(taskId);
+
+                                let resources = task.Resources;
+
+                                if (task.Resources) {
+                                    let info = calcStartEnd(resources);
+                                    return Math.round((100 - info.sumRemaining * 100 / info.sumTotal) * 10) / 10 + '%';
+                                }
+                                return '';
+                            }
+                        },
+                        {
+                            name: "workload", label: "Work", align: "right", width: 65, template: function (resource) {
+                                let taskId = that.gantt.getSelectedId();
+                                if (!taskId)
+                                    return '';
+                                let task: GanttItem = that.gantt.getTask(taskId);
+
+                                let resources = task.Resources;
+
+                                let info = calcStartEnd(resources);
+                                return (Math.round((info.sumTotal * 10) || 0) / 10) + "h";
+                            }
+                        },
+                        {
+                            name: "workload", label: "Rem. Work", align: "right", width: 65, template: function (resource) {
+                                let taskId = that.gantt.getSelectedId();
+                                if (!taskId)
+                                    return '';
+                                let task: GanttItem = that.gantt.getTask(taskId);
+
+                                let resources = task.Resources;
+
+                                let info = calcStartEnd(resources);
+                                return (Math.round((info.sumRemaining * 10) || 0) / 10) + "h";
                             }
                         }
                     ]
@@ -427,15 +514,20 @@ namespace controls.html.dhtmlx {
         }
 
         onTaskClicked(id: string) {
+            if (id == this.gantt.getSelectedId())
+                return true;
+
             this.workBuffer = {};
             if (id) {
                 this.customControlEvent('OnTaskClickedFromClient', { id });
 
-                let task = this.gantt.getTask(id);
+                let task:GanttItem = this.gantt.getTask(id);
 
                 let allResources: GanttResource[] = [];
-                for (let i = 0; i < task.Resources.length; ++i)
-                    allResources.push(this.allResourceDic[task.Resources[i].resource_id]);
+                if (task.Resources) {
+                    for (let i = 0; i < task.Resources.length; ++i)
+                        allResources.push(this.allResourceDic[task.Resources[i].resource_id]);
+                }
                 this.selectedTaskResource = allResources;
             }
             else
