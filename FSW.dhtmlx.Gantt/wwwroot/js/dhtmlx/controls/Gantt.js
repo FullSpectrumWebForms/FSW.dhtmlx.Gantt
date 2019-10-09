@@ -427,7 +427,7 @@ var controls;
                         if (col.Template) {
                             let that = this;
                             template = function (item) {
-                                return item[this];
+                                return item[this] || "";
                             }.bind(col.Template);
                         }
                         columns.push({
