@@ -214,6 +214,9 @@ namespace FSW.dhtmlx
         public bool Resize = true;
 
         public int Order;
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Template;
     }
 
     public class GanttColumnAttribute : Attribute
@@ -227,6 +230,8 @@ namespace FSW.dhtmlx
         public bool Resize { get; set; } = true;
 
         public int Order { get; set; }
+
+        public string Template { get; set; }
     }
 
     public class GanttResourceTaskLink
@@ -502,7 +507,8 @@ namespace FSW.dhtmlx
                     Width = attribute.Width,
                     Text = attribute.Text ?? field.Name,
                     AlignPosition = attribute.AlignPosition,
-                    Order = attribute.Order
+                    Order = attribute.Order,
+                    Template = attribute.Template
                 };
             }
         }

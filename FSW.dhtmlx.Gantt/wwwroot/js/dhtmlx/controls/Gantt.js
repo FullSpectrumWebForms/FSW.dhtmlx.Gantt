@@ -423,6 +423,13 @@ var controls;
                         catch (e) {
                             width = col.Width;
                         }
+                        let template = null;
+                        if (col.Template) {
+                            let that = this;
+                            template = function (item) {
+                                return item[this];
+                            }.bind(col.Template);
+                        }
                         columns.push({
                             name: col.Field,
                             label: col.Text,
@@ -430,7 +437,8 @@ var controls;
                             align: col.AlignPosition,
                             tree: col.Tree,
                             resize: col.Resize,
-                            order: col.Order
+                            order: col.Order,
+                            template: template
                         });
                     }
                     this.gantt.config.columns = columns.sort((a, b) => a.order < b.order ? -1 : a.order == b.order ? 0 : 1);

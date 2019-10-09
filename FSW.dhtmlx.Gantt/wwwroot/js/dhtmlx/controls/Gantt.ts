@@ -50,6 +50,8 @@ namespace controls.html.dhtmlx {
         Resize: Boolean;
 
         Order: number;
+
+        Template: string;
     }
 
     interface GanttResource {
@@ -521,7 +523,7 @@ namespace controls.html.dhtmlx {
             if (id) {
                 this.customControlEvent('OnTaskClickedFromClient', { id });
 
-                let task:GanttItem = this.gantt.getTask(id);
+                let task: GanttItem = this.gantt.getTask(id);
 
                 let allResources: GanttResource[] = [];
                 if (task.Resources) {
@@ -543,7 +545,6 @@ namespace controls.html.dhtmlx {
 
             return true;
         }
-
         onColumnsChangedFromServer() {
 
             let columns = [];
@@ -561,6 +562,14 @@ namespace controls.html.dhtmlx {
                 catch (e) {
                     width = col.Width;
                 }
+                let template = null;
+                if (col.Template) {
+                    let that = this;
+                    template = function (item) {
+                        return item[this];
+                    }.bind(col.Template)
+                }
+
                 columns.push({
                     name: col.Field,
                     label: col.Text,
@@ -568,7 +577,8 @@ namespace controls.html.dhtmlx {
                     align: col.AlignPosition,
                     tree: col.Tree,
                     resize: col.Resize,
-                    order: col.Order
+                    order: col.Order,
+                    template: template
                 });
             }
 
