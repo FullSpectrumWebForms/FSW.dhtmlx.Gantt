@@ -204,8 +204,16 @@ namespace controls.html.dhtmlx {
                 this.gantt.config.resource_store = "resource";
                 this.gantt.config.order_branch = true;
 
-                let calcStartEnd = function (resources: GanttResourceTaskLink[]) {
+                let calcStartEnd = function (resources: GanttResourceTaskLink[], specificResource?: GanttResource) {
 
+                    if (specificResource) {
+                        let resourcesToUse: GanttResourceTaskLink[] = [];
+                        for (let i = 0; i < resources.length; ++i) {
+                            if (resources[i].resource_id == specificResource.id)
+                                resourcesToUse.push(resources[i]);
+                        }
+                        resources = resourcesToUse;
+                    }
                     let min: Date;
                     let max: Date;
                     let sumTotal = 0;
@@ -272,7 +280,7 @@ namespace controls.html.dhtmlx {
                                 let resources = task.Resources;
 
                                 if (task.Resources) {
-                                    let info = calcStartEnd(resources);
+                                    let info = calcStartEnd(resources, resource);
                                     return Math.round((100 - info.sumRemaining * 100 / info.sumTotal) * 10) / 10 + '%';
                                 }
                                 return '';
@@ -287,7 +295,7 @@ namespace controls.html.dhtmlx {
 
                                 let resources = task.Resources;
 
-                                let info = calcStartEnd(resources);
+                                let info = calcStartEnd(resources, resource);
                                 return (Math.round((info.sumTotal * 10) || 0) / 10) + "h";
                             }
                         },
@@ -300,7 +308,7 @@ namespace controls.html.dhtmlx {
 
                                 let resources = task.Resources;
 
-                                let info = calcStartEnd(resources);
+                                let info = calcStartEnd(resources, resource);
                                 return (Math.round((info.sumRemaining * 10) || 0) / 10) + "h";
                             }
                         }

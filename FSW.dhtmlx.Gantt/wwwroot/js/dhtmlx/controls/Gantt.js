@@ -116,7 +116,15 @@ var controls;
                         this.gantt.config.resource_property = 'Resources';
                         this.gantt.config.resource_store = "resource";
                         this.gantt.config.order_branch = true;
-                        let calcStartEnd = function (resources) {
+                        let calcStartEnd = function (resources, specificResource) {
+                            if (specificResource) {
+                                let resourcesToUse = [];
+                                for (let i = 0; i < resources.length; ++i) {
+                                    if (resources[i].resource_id == specificResource.id)
+                                        resourcesToUse.push(resources[i]);
+                                }
+                                resources = resourcesToUse;
+                            }
                             let min;
                             let max;
                             let sumTotal = 0;
@@ -173,7 +181,7 @@ var controls;
                                         let task = that.gantt.getTask(taskId);
                                         let resources = task.Resources;
                                         if (task.Resources) {
-                                            let info = calcStartEnd(resources);
+                                            let info = calcStartEnd(resources, resource);
                                             return Math.round((100 - info.sumRemaining * 100 / info.sumTotal) * 10) / 10 + '%';
                                         }
                                         return '';
@@ -186,7 +194,7 @@ var controls;
                                             return '';
                                         let task = that.gantt.getTask(taskId);
                                         let resources = task.Resources;
-                                        let info = calcStartEnd(resources);
+                                        let info = calcStartEnd(resources, resource);
                                         return (Math.round((info.sumTotal * 10) || 0) / 10) + "h";
                                     }
                                 },
@@ -197,7 +205,7 @@ var controls;
                                             return '';
                                         let task = that.gantt.getTask(taskId);
                                         let resources = task.Resources;
-                                        let info = calcStartEnd(resources);
+                                        let info = calcStartEnd(resources, resource);
                                         return (Math.round((info.sumRemaining * 10) || 0) / 10) + "h";
                                     }
                                 }
