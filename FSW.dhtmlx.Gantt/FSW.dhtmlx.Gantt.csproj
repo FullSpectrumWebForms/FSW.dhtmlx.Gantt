@@ -3,7 +3,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>FSW.dhtmlx.Gantt</PackageId>
-    <Version>1.2.7.6</Version>
+    <Version>2.0.0.1-beta</Version>
     <Authors>Pascal Arnold</Authors>
     <Company>N/A</Company>
     <PackageTags>FSW dhtmlx gantt</PackageTags>
@@ -11,7 +11,7 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netcoreapp3</TargetFramework>
     <TypeScriptToolsVersion>2.8</TypeScriptToolsVersion>
     <ApplicationIcon />
     <OutputType>Library</OutputType>
@@ -21,10 +21,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSW" Version="2.1.7.3" />
+    <PackageReference Include="FSW" Version="3.0.2.6-beta" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.0-preview1.19506.1" />
   </ItemGroup>
 
   <ItemGroup>
