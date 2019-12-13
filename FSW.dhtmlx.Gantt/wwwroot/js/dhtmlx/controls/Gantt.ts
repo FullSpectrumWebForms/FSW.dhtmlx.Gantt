@@ -238,42 +238,6 @@ namespace controls.html.dhtmlx {
                 this.gantt.config.resource_store = "resource";
                 this.gantt.config.order_branch = true;
 
-                let calcStartEnd = function (resources: GanttResourceTaskLink[], specificResource?: GanttResource) {
-
-                    if (specificResource) {
-                        let resourcesToUse: GanttResourceTaskLink[] = [];
-                        for (let i = 0; i < resources.length; ++i) {
-                            if (resources[i].resource_id == specificResource.id)
-                                resourcesToUse.push(resources[i]);
-                        }
-                        resources = resourcesToUse;
-                    }
-                    let min: Date;
-                    let max: Date;
-                    let sumTotal = 0;
-                    let sumRemaining = 0;
-
-                    for (let i = 0; i < resources.length; ++i) {
-                        let start = moment(resources[i].StartParsed);
-                        let end = moment(resources[i].FinishParsed);
-                        if (!min || start < min)
-                            min = start;
-                        if (!max || end > max)
-                            max = end;
-
-                        sumRemaining += resources[i].value;
-                        sumTotal += resources[i].TotalWork;
-                    }
-
-                    return {
-                        min,
-                        max,
-                        sumRemaining,
-                        sumTotal
-                    };
-                }
-
-
                 this.gantt.templates.resource_cell_value = function (start_date, end_date, resource, tasks) {
 
                     let totalWork = computeWork(resource, start_date, end_date);
