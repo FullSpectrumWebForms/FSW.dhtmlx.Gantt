@@ -20,7 +20,13 @@ namespace Tests.Pages
             public List<GanttResourceTaskLink> Resources { get; set; }
         }
 
-        private readonly Gantt<CustomGanttItem> TestGantt = new Gantt<CustomGanttItem>();
+        public class CustomGanttResource : GanttResource
+        {
+            [GanttResource(AlignPosition = AlignPosition.Right, Text = "Work", Width = 250)]
+            public string Work;
+        }
+
+        private readonly Gantt<CustomGanttItem, CustomGanttResource> TestGantt = new Gantt<CustomGanttItem, CustomGanttResource>();
 
         public override void OnPageLoad()
         {
@@ -29,22 +35,34 @@ namespace Tests.Pages
             TestGantt.Scale = GanttScale.Day;
             //TestGantt.RowHeight = 20;
 
+            var parent = new CustomGanttResource()
+            {
+                Id = 4,
+                Name = "Parent",
+                Work = "1"
+            };
+
             TestGantt.ResourceStore = new[]
             {
-                new GanttResource()
+                parent,
+                new CustomGanttResource()
                 {
                     Id = 1,
                     Name = "Test 1",
+                    Work = "1",
+                    Parent = parent
                 },
-                new GanttResource()
+                new CustomGanttResource()
                 {
                     Id = 2,
                     Name = "Test 2",
+                    Work = "2"
                 },
-                new GanttResource()
+                new CustomGanttResource()
                 {
                     Id = 3,
                     Name = "Test 3",
+                    Work = "3"
                 }
             };
 
@@ -89,6 +107,8 @@ namespace Tests.Pages
                 }
             };
 
+            TestGantt.ShowResourceSection = true;
+            TestGantt.ShowTimeline = false;
             TestGantt.OnItemResized += TestGantt_OnItemResized;
             TestGantt.OnItemMoved += TestGantt_OnItemMoved;
             TestGantt.OnItemProgressDragged += TestGantt_OnItemProgressDragged;

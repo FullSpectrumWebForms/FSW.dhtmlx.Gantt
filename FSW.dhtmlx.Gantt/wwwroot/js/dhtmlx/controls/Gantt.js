@@ -35,6 +35,10 @@ var controls;
                 get Columns() {
                     return this.getPropertyValue("Columns");
                 }
+                // ------------------------------------------------------------------------   ResourceColumns
+                get ResourceColumns() {
+                    return this.getPropertyValue("ResourceColumns");
+                }
                 // ------------------------------------------------------------------------   Items
                 get Scale() {
                     return this.getPropertyValue("Scale");
@@ -47,6 +51,9 @@ var controls;
                 }
                 get ShowResourceSection() {
                     return this.getPropertyValue("ShowResourceSection");
+                }
+                get ShowTimeline() {
+                    return this.getPropertyValue("ShowTimeline");
                 }
                 get RowHeight() {
                     return this.getPropertyValue("RowHeight");
@@ -80,12 +87,26 @@ var controls;
                                     if (work || work == 0)
                                         return work;
                                 }
-                                end = moment(start).add(that.gantt.config.subscales[0].step, that.gantt.config.subscales[0].unit).toDate();
+                                let step, unit;
+                                if (!that.gantt.config.subscales || !(that.gantt.config.subscales.length > 0)) {
+                                    step = that.gantt.config.scales[0].step;
+                                    unit = that.gantt.config.scales[0].unit;
+                                }
+                                else {
+                                    step = that.gantt.config.subscales[0].step;
+                                    unit = that.gantt.config.subscales[0].unit;
+                                }
+                                end = moment(start).add(step, unit).toDate();
                             }
-                            var taskId = that.gantt.getSelectedId();
-                            if (!taskId)
-                                return 0;
-                            let task = that.gantt.getTask(taskId);
+                            let task;
+                            if (that.ShowTimeline) {
+                                var taskId = that.gantt.getSelectedId();
+                                if (!taskId)
+                                    return 0;
+                                task = that.gantt.getTask(taskId);
+                            }
+                            else
+                                task = that.gantt.getTaskByIndex(0);
                             var totalWork = 0;
                             for (let j = 0; j < (task.Resources || []).length; ++j) {
                                 let cResource = task.Resources[j];
@@ -232,34 +253,48 @@ var controls;
                             //}
                             return css.join(" ");
                         };
+                        let rows = [];
+                        if (this.ShowTimeline) {
+                            rows.push({
+                                cols: [
+                                    { view: "grid", group: "grids", scrollY: "scrollVer" },
+                                    { resizer: true, width: 1 },
+                                    { view: "timeline", scrollX: "scrollHor", scrollY: "scrollVer" },
+                                    { view: "scrollbar", id: "scrollVer", group: "vertical" }
+                                ],
+                                gravity: 2
+                            });
+                            rows.push({ resizer: true, width: 1 });
+                            rows.push({
+                                config: resourceConfig,
+                                cols: [
+                                    { view: "resourceGrid", group: "grids", width: 435, scrollY: "resourceVScroll" },
+                                    { resizer: true, width: 1 },
+                                    { view: "resourceTimeline", scrollX: "scrollHor", scrollY: "resourceVScroll" },
+                                    { view: "scrollbar", id: "resourceVScroll", group: "vertical" }
+                                ],
+                                gravity: 1
+                            });
+                        }
+                        else {
+                            rows.push({
+                                config: resourceConfig,
+                                cols: [
+                                    { view: "resourceGrid", group: "grids", width: 435, scrollY: "resourceVScroll" },
+                                    { resizer: true, width: 1 },
+                                    { view: "resourceTimeline", scrollX: "scrollHor", scrollY: "resourceVScroll" },
+                                    { view: "scrollbar", id: "resourceVScroll", group: "vertical" }
+                                ],
+                                gravity: 1
+                            });
+                        }
+                        rows.push({ view: "scrollbar", id: "scrollHor" });
                         this.gantt.config.layout = {
                             css: "gantt_container",
-                            rows: [
-                                {
-                                    cols: [
-                                        { view: "grid", group: "grids", scrollY: "scrollVer" },
-                                        { resizer: true, width: 1 },
-                                        { view: "timeline", scrollX: "scrollHor", scrollY: "scrollVer" },
-                                        { view: "scrollbar", id: "scrollVer", group: "vertical" }
-                                    ],
-                                    gravity: 2
-                                },
-                                { resizer: true, width: 1 },
-                                {
-                                    config: resourceConfig,
-                                    cols: [
-                                        { view: "resourceGrid", group: "grids", width: 435, scrollY: "resourceVScroll" },
-                                        { resizer: true, width: 1 },
-                                        { view: "resourceTimeline", scrollX: "scrollHor", scrollY: "resourceVScroll" },
-                                        { view: "scrollbar", id: "resourceVScroll", group: "vertical" }
-                                    ],
-                                    gravity: 1
-                                },
-                                { view: "scrollbar", id: "scrollHor" }
-                            ]
+                            rows: rows
                         };
                     }
-                    var resourcesStore = this.gantt.createDatastore({
+                    this.gantt.createDatastore({
                         name: that.gantt.config.resource_store,
                         type: "treeDatastore",
                         initItem: function (item) {
@@ -272,13 +307,13 @@ var controls;
                     this.gantt.init(this.element[0]);
                     this.getProperty("Editable").onChangedFromServer.register(this.onEditableChangedFromServer.bind(this));
                     this.getProperty("GridWidth").onChangedFromServer.register(this.onGridWidthChangedFromServer.bind(this));
-                    this.getProperty("Columns").onChangedFromServer.register(this.onColumnsChangedFromServer.bind(this), true);
+                    this.getProperty("Columns").onChangedFromServer.register(this.onColumnsChangedFromServer.bind(this));
+                    this.getProperty("ResourceColumns").onChangedFromServer.register(this.onColumnsChangedFromServer.bind(this), true);
                     this.getProperty("Scale").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this));
                     this.getProperty("SubScales").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this), true);
                     this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this));
                     this.getProperty("Links").onChangedFromServer.register(this.onLinksChangedFromServer.bind(this), true);
                     this.getProperty("ResourceStore").onChangedFromServer.register(this.onResourceStoreChangedFromServer.bind(this), true);
-                    this.isInit = true;
                     this.gantt.templates.grid_row_class = function (start, end, task) {
                         return task.GridCssClass;
                     };
@@ -286,6 +321,8 @@ var controls;
                         if (task.color == 'Transparent' || task.color == 'transparent')
                             return that.id + '_' + 'disp_none';
                     };
+                    this.isInit = true;
+                    this.gantt.init(this.element[0]);
                     this.gantt.render();
                 }
                 removeControl() {
@@ -381,12 +418,22 @@ var controls;
                     this.gantt.render();
                 }
                 onResourceStoreChangedFromServer() {
-                    this.allResourceDic = {};
-                    for (let i = 0; i < this.ResourceStore.length; ++i) {
-                        let resource = this.ResourceStore[i];
-                        this.allResourceDic[resource.id] = resource;
+                    if (this.ShowTimeline) {
+                        this.allResourceDic = {};
+                        for (let i = 0; i < this.ResourceStore.length; ++i) {
+                            let resource = this.ResourceStore[i];
+                            this.allResourceDic[resource.id] = resource;
+                        }
+                        this.onTaskClicked(this.gantt.getSelectedId());
                     }
-                    this.onTaskClicked(this.gantt.getSelectedId());
+                    else {
+                        var store = this.gantt.getDatastore(gantt.config.resource_store);
+                        store.clearAll();
+                        let that = this;
+                        setTimeout(function () {
+                            store.parse(that.ResourceStore);
+                        }, 1);
+                    }
                     this.gantt.render();
                 }
                 onTaskDoubleClicked(id) {
@@ -395,7 +442,7 @@ var controls;
                         this.customControlEvent('OnTaskDoubleClickedFromClient', { id });
                 }
                 onTaskClicked(id) {
-                    if (id == this.gantt.getSelectedId())
+                    if (id == this.gantt.getSelectedId() || !this.ShowTimeline) // if we don't even show the timeline, ignore the error
                         return true;
                     this.workBuffer = {};
                     if (id) {
@@ -423,7 +470,7 @@ var controls;
                     let columnsFromServer = this.Columns;
                     let keys = Object.keys(columnsFromServer);
                     for (let i = 0; i < keys.length; ++i) {
-                        var col = columnsFromServer[keys[i]];
+                        let col = columnsFromServer[keys[i]];
                         let width;
                         try {
                             width = parseInt(col.Width);
@@ -450,6 +497,28 @@ var controls;
                         });
                     }
                     this.gantt.config.columns = columns.sort((a, b) => a.order < b.order ? -1 : a.order == b.order ? 0 : 1);
+                    let resourceConfig = { columns: [] };
+                    let resourceColsFromServer = this.ResourceColumns;
+                    keys = Object.keys(resourceColsFromServer);
+                    for (let i = 0; i < keys.length; ++i) {
+                        let col = $.extend({}, resourceColsFromServer[keys[i]]);
+                        let field = resourceColsFromServer[keys[i]].field;
+                        col.template = function (resource) {
+                            return resource[field];
+                        };
+                        resourceConfig.columns.push(col);
+                    }
+                    resourceConfig.columns = resourceConfig.columns.sort((a, b) => a.order < b.order ? -1 : a.order == b.order ? 0 : 1);
+                    let layoutRows = this.gantt.config.layout.rows;
+                    for (let i = 0; i < layoutRows.length; ++i) {
+                        if (layoutRows[i] && layoutRows[i].cols && layoutRows[i].cols.length > 0 && layoutRows[i].cols[0].view == 'resourceGrid')
+                            layoutRows[i].config = resourceConfig;
+                    }
+                    if (this.isInit)
+                        this.init();
+                }
+                init() {
+                    this.gantt.init(this.element[0]);
                     this.gantt.render();
                 }
                 initializeHtmlElement() {

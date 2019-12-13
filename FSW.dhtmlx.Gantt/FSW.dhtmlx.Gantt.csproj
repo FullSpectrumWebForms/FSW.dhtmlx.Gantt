@@ -3,7 +3,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>FSW.dhtmlx.Gantt</PackageId>
-    <Version>2.0.0.1-beta</Version>
+    <Version>2.0.1.25-beta</Version>
     <Authors>Pascal Arnold</Authors>
     <Company>N/A</Company>
     <PackageTags>FSW dhtmlx gantt</PackageTags>
@@ -11,8 +11,8 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <TargetFramework>netcoreapp3</TargetFramework>
-    <TypeScriptToolsVersion>2.8</TypeScriptToolsVersion>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TypeScriptToolsVersion>3.7</TypeScriptToolsVersion>
     <ApplicationIcon />
     <OutputType>Library</OutputType>
     <StartupObject />
@@ -21,10 +21,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSW" Version="3.0.2.6-beta" />
+    <PackageReference Include="FSW" Version="3.0.2.8-beta" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.0-preview1.19506.1" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +40,10 @@
     <EmbeddedResource Include="wwwroot\js\**\*.js" />
     <EmbeddedResource Include="wwwroot\lib\**" />
     <EmbeddedResource Remove="wwwroot\**\*.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\js\dhtmlx\controls\Gantt.js" />
   </ItemGroup>
   
   <ItemGroup>

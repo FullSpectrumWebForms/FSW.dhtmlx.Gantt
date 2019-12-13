@@ -73,33 +73,6 @@ namespace FSW.dhtmlx
         public bool? Editable { get; set; }
     }
 
-    public class GanttResource
-    {
-        [JsonProperty(PropertyName = "id")]
-        public int Id { get; set; }
-
-        [JsonProperty(PropertyName = "text")]
-        public string Name { get; set; }
-
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-#pragma warning disable IDE0052 // Remove unread private members
-        private int? parent;
-#pragma warning restore IDE0052 // Remove unread private members
-
-        [JsonIgnore]
-        private GanttResource _Parent;
-        [JsonIgnore]
-        public GanttResource Parent
-        {
-            get => _Parent;
-            set
-            {
-                _Parent = value;
-                parent = value?.Id;
-            }
-        }
-    }
-
     public class GanttItem
     {
         [JsonProperty(PropertyName = "id")]
@@ -198,7 +171,7 @@ namespace FSW.dhtmlx
 
         public string Width;
 
-        [JsonProperty(PropertyName = nameof(AlignPosition))]
+        [JsonProperty(PropertyName = "align")]
         private string AlignPosition_ = AlignPosition.Left.ToString().ToLower();
 
         [JsonIgnore]
@@ -234,62 +207,6 @@ namespace FSW.dhtmlx
         public string Template { get; set; }
     }
 
-    public class GanttResourceTaskLink
-    {
-#pragma warning disable IDE0052 // Remove unread private members
-
-        [JsonProperty]
-        private int resource_id;
-        private GanttResource Resource_;
-        [JsonIgnore]
-        public GanttResource Resource
-        {
-            get => Resource_;
-            set
-            {
-                Resource_ = value;
-                resource_id = value.Id;
-            }
-        }
-
-        [JsonProperty]
-        private double value;
-        public TimeSpan Work
-        {
-            get => TimeSpan.FromHours(value);
-            set => this.value = value.TotalHours;
-        }
-
-        [JsonProperty(PropertyName = "Start")]
-        protected string _Start;
-        [JsonIgnore]
-        public DateTime? Start
-        {
-            get => _Start == null ? null : (DateTime?)DateTime.ParseExact(_Start, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-            set => _Start = value?.ToString("dd-MM-yyyy");
-        }
-
-        [JsonProperty(PropertyName = "Finish")]
-        protected string _Finish;
-        [JsonIgnore]
-        public DateTime? Finish
-        {
-            get => _Finish == null ? null : (DateTime?)DateTime.ParseExact(_Finish, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-            set => _Finish = value?.ToString("dd-MM-yyyy");
-        }
-
-        [JsonProperty(PropertyName = nameof(TotalWork))]
-        private double TotalWork_;
-        [JsonIgnore]
-        public TimeSpan TotalWork
-        {
-            get => TimeSpan.FromHours(TotalWork_);
-            set => this.TotalWork_ = value.TotalHours;
-        }
-
-#pragma warning restore IDE0052 // Remove unread private members
-    }
-
     public interface IGanttTaskWithResources
     {
         List<GanttResourceTaskLink> Resources { get; set; }
@@ -317,7 +234,9 @@ namespace FSW.dhtmlx
     }
 
 
-    public class Gantt<DataType> : Controls.Html.HtmlControlBase where DataType : GanttItem
+    public class Gantt<DataType, ResourceType> : FSW.Controls.Html.HtmlControlBase 
+        where DataType : GanttItem 
+        where ResourceType: GanttResource
     {
         public override string ControlType => "dhtmlx.Gantt";
 
@@ -342,11 +261,18 @@ namespace FSW.dhtmlx
             set => Columns_.Set(value is Dictionary<string, GanttColumn> list ? list : value.ToDictionary(x => x.Key, x => x.Value));
         }
 
-        private ControlPropertyList<GanttResource> ResourceStore_;
-        public IList<GanttResource> ResourceStore
+        private ControlPropertyDictionary<GanttResourceColumn> ResourceColumns_;
+        public IDictionary<string, GanttResourceColumn> ResourceColumns
+        {
+            get => ResourceColumns_;
+            set => ResourceColumns_.Set(value is Dictionary<string, GanttResourceColumn> list ? list : value.ToDictionary(x => x.Key, x => x.Value));
+        }
+
+        private ControlPropertyList<ResourceType> ResourceStore_;
+        public IList<ResourceType> ResourceStore
         {
             get => ResourceStore_;
-            set => ResourceStore_.Set(value is List<GanttResource> list ? list : value.ToList());
+            set => ResourceStore_.Set(value is List<ResourceType> list ? list : value.ToList());
         }
 
         public int? RowHeight
@@ -386,6 +312,12 @@ namespace FSW.dhtmlx
             set => SubScales_.Set(value as List<GanttSubScale> ?? value.ToList());
         }
 
+        public bool ShowTimeline
+        {
+            get => GetProperty<bool>(PropertyName());
+            set => SetProperty(PropertyName(), value);
+        }
+
         public bool OverrideGridCssWithGridColor { get; set; } = false;
 
         public delegate void OnItemResizedHandler(DataType item, DateTime oldStart, int oldDuration);
@@ -410,14 +342,16 @@ namespace FSW.dhtmlx
 
             Items_ = new ControlPropertyList<DataType>(this, nameof(Items));
             Columns_ = new ControlPropertyDictionary<GanttColumn>(this, nameof(Columns));
+            ResourceColumns_ = new ControlPropertyDictionary<GanttResourceColumn>(this, nameof(ResourceColumns));
             Links_ = new ControlPropertyList<GanttLink>(this, nameof(Links));
-            ResourceStore_ = new ControlPropertyList<GanttResource>(this, nameof(ResourceStore));
+            ResourceStore_ = new ControlPropertyList<ResourceType>(this, nameof(ResourceStore));
             SubScales_ = new ControlPropertyList<GanttSubScale>(this, nameof(SubScales));
             Scale = GanttScale.Month;
             Editable = false;
             ShowResourceSection = typeof(DataType).GetInterface(nameof(IGanttTaskWithResources), false) != null;
             RowHeight = null;
             GridWidth = 360; // default value of dhtmlx
+            ShowTimeline = true;
 
             InitializeColumnsFromDataType();
 
@@ -495,9 +429,7 @@ namespace FSW.dhtmlx
 
             foreach (var field in fields)
             {
-                var attribute = field.GetCustomAttributes(typeof(GanttColumnAttribute), false)?.FirstOrDefault() as GanttColumnAttribute;
-
-                if (attribute == null)
+                if (!(field.GetCustomAttributes(typeof(GanttColumnAttribute), false)?.FirstOrDefault() is GanttColumnAttribute attribute))
                     continue;
 
                 Columns[field.Name] = new GanttColumn()
@@ -509,6 +441,28 @@ namespace FSW.dhtmlx
                     AlignPosition = attribute.AlignPosition,
                     Order = attribute.Order,
                     Template = attribute.Template
+                };
+            }
+
+
+            var resourceFields = typeof(ResourceType)
+                .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.FlattenHierarchy)
+                .OfType<System.Reflection.MemberInfo>()
+                .Concat(typeof(ResourceType).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.FlattenHierarchy));
+
+            foreach (var field in resourceFields)
+            {
+                if (!(field.GetCustomAttributes(typeof(GanttResourceAttribute), false)?.FirstOrDefault() is GanttResourceAttribute attribute))
+                    continue;
+
+                ResourceColumns[field.Name] = new GanttResourceColumn()
+                {
+                    Field = attribute.Field ?? field.Name,
+                    Width = attribute.Width == 0 ? (int?)null : attribute.Width,
+                    Order = attribute.Order,
+                    Text = attribute.Text ?? field.Name,
+                    AlignPosition = attribute.AlignPosition,
+                    IsTree = attribute.IsTree
                 };
             }
         }

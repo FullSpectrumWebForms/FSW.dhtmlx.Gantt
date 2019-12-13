@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSW.dhtmlx.Gantt.Enterprise" Version="1.0.2.4" />
-    <PackageReference Include="FSW.Semantic" Version="2.0.2.2" />
+    <PackageReference Include="FSW.dhtmlx.Gantt.Enterprise" Version="2.0.1.1-beta" />
+    <PackageReference Include="FSW.Semantic" Version="3.0.1.2-beta" />
     <PackageReference Include="Microsoft.AspNetCore.Antiforgery" Version="2.2.0" />
   </ItemGroup>
 

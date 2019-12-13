@@ -10,7 +10,9 @@ namespace FSW.dhtmlx
     {
         public override void ConfigureMvc(IMvcBuilder mvc)
         {
+            mvc.AddApplicationPart(typeof(Startup).Assembly);
         }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public override void ConfigureServices(IServiceCollection services)
         {
@@ -23,6 +25,7 @@ namespace FSW.dhtmlx
             {
                 "wwwroot.js.dhtmlx.controls.Gantt.js",
             });
+
             app.UseStaticFiles(new StaticFileOptions()
             {
                 FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly, "FSW.dhtmlx.wwwroot")
