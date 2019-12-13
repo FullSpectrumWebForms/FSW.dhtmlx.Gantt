@@ -273,81 +273,6 @@ namespace controls.html.dhtmlx {
                     };
                 }
 
-                var resourceConfig = {
-                    columns: [
-                        {
-                            name: "name", label: "Name", tree: true, template: function (resource) {
-                                return resource.text;
-                            }
-                        },
-                        {
-                            name: 'start', label: 'Début', align: "right", width: 80, template: function (resource: GanttResource) {
-                                let taskId = that.gantt.getSelectedId();
-                                if (!taskId)
-                                    return '';
-                                let task: GanttItem = that.gantt.getTask(taskId);
-
-                                let resources = task.Resources;
-
-                                return moment(calcStartEnd(resources).min).format('YYYY-MM-DD');
-                            }
-                        },
-                        {
-                            name: 'end', label: 'Fin', align: "right", width: 80, template: function (resource: GanttResource) {
-                                let taskId = that.gantt.getSelectedId();
-                                if (!taskId)
-                                    return '';
-                                let task: GanttItem = that.gantt.getTask(taskId);
-
-                                let resources = task.Resources;
-
-                                return moment(calcStartEnd(resources).max).format('YYYY-MM-DD');
-                            }
-                        },
-                        {
-                            name: 'progression', label: '% W. Compl.', align: "right", width: 70, template: function (resource: GanttResource) {
-                                let taskId = that.gantt.getSelectedId();
-                                if (!taskId)
-                                    return '';
-                                let task: GanttItem = that.gantt.getTask(taskId);
-
-                                let resources = task.Resources;
-
-                                if (task.Resources) {
-                                    let info = calcStartEnd(resources, resource);
-                                    return Math.round((100 - info.sumRemaining * 100 / info.sumTotal) * 10) / 10 + '%';
-                                }
-                                return '';
-                            }
-                        },
-                        {
-                            name: "workload", label: "Work", align: "right", width: 65, template: function (resource) {
-                                let taskId = that.gantt.getSelectedId();
-                                if (!taskId)
-                                    return '';
-                                let task: GanttItem = that.gantt.getTask(taskId);
-
-                                let resources = task.Resources;
-
-                                let info = calcStartEnd(resources, resource);
-                                return (Math.round((info.sumTotal * 10) || 0) / 10) + "h";
-                            }
-                        },
-                        {
-                            name: "workload", label: "Rem. Work", align: "right", width: 65, template: function (resource) {
-                                let taskId = that.gantt.getSelectedId();
-                                if (!taskId)
-                                    return '';
-                                let task: GanttItem = that.gantt.getTask(taskId);
-
-                                let resources = task.Resources;
-
-                                let info = calcStartEnd(resources, resource);
-                                return (Math.round((info.sumRemaining * 10) || 0) / 10) + "h";
-                            }
-                        }
-                    ]
-                };
 
                 this.gantt.templates.resource_cell_value = function (start_date, end_date, resource, tasks) {
 
@@ -394,7 +319,7 @@ namespace controls.html.dhtmlx {
                     rows.push({ resizer: true, width: 1 });
 
                     rows.push({
-                        config: resourceConfig,
+                        config: { columns: [] },
                         cols: [
                             { view: "resourceGrid", group: "grids", width: 435, scrollY: "resourceVScroll" },
                             { resizer: true, width: 1 },
@@ -406,7 +331,7 @@ namespace controls.html.dhtmlx {
                 }
                 else {
                     rows.push({
-                        config: resourceConfig,
+                        config: { columns: [] },
                         cols: [
                             { view: "resourceGrid", group: "grids", width: 435, scrollY: "resourceVScroll" },
                             { resizer: true, width: 1 },
