@@ -356,7 +356,7 @@ namespace controls.html.dhtmlx {
         }
         lastLeft = 0;
         doScroll(left: number, top: number) {
-            if ((left - this.lastLeft) > 10 || (this.lastLeft - left) < -10) {
+            if ((left - this.lastLeft) > 10 || (left - this.lastLeft) < -10) {
                 this.lastLeft = left;
                 this.render();
             }

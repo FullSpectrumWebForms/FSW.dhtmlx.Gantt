@@ -234,7 +234,7 @@ var controls;
                     this.gantt.render();
                 }
                 doScroll(left, top) {
-                    if (left != this.lastLeft) {
+                    if ((left - this.lastLeft) > 10 || (this.lastLeft - left) < -10) {
                         this.lastLeft = left;
                         this.render();
                     }
