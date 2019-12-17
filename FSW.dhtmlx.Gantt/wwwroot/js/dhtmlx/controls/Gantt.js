@@ -18,6 +18,7 @@ var controls;
                     this.isPro = false;
                     this.workBuffer = {};
                     this.allResourceDic = {};
+                    this.lastLeft = 0;
                 }
                 // ------------------------------------------------------------------------   Items
                 get Items() {
@@ -52,14 +53,20 @@ var controls;
                 get ShowResourceSection() {
                     return this.getPropertyValue("ShowResourceSection");
                 }
-                get ShowTimeline() {
-                    return this.getPropertyValue("ShowTimeline");
+                get TimelineGravity() {
+                    return this.getPropertyValue("TimelineGravity");
+                }
+                get ResourceGravity() {
+                    return this.getPropertyValue("ResourceGravity");
                 }
                 get RowHeight() {
                     return this.getPropertyValue("RowHeight");
                 }
                 get GridWidth() {
                     return this.getPropertyValue("GridWidth");
+                }
+                get AlwaysShowFirstTaskResources() {
+                    return this.getPropertyValue("AlwaysShowFirstTaskResources");
                 }
                 initialize(type, index, id, properties) {
                     super.initialize(type, index, id, properties);
@@ -76,6 +83,7 @@ var controls;
                     this.events.push(this.gantt.attachEvent("onTaskDblClick", this.onTaskDoubleClicked.bind(this)));
                     this.events.push(this.gantt.attachEvent("onTaskClick", this.onTaskClicked.bind(this)));
                     this.events.push(this.gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
+                    this.events.push(this.gantt.attachEvent("onGanttScroll", this.doScroll.bind(this)));
                     if (this.ShowResourceSection && this.isPro) {
                         let computeWork = function (resource, start, end) {
                             let startStr;
@@ -99,7 +107,7 @@ var controls;
                                 end = moment(start).add(step, unit).toDate();
                             }
                             let task;
-                            if (that.ShowTimeline) {
+                            if (!that.AlwaysShowFirstTaskResources) {
                                 var taskId = that.gantt.getSelectedId();
                                 if (!taskId)
                                     return 0;
@@ -137,101 +145,6 @@ var controls;
                         this.gantt.config.resource_property = 'Resources';
                         this.gantt.config.resource_store = "resource";
                         this.gantt.config.order_branch = true;
-                        let calcStartEnd = function (resources, specificResource) {
-                            if (specificResource) {
-                                let resourcesToUse = [];
-                                for (let i = 0; i < resources.length; ++i) {
-                                    if (resources[i].resource_id == specificResource.id)
-                                        resourcesToUse.push(resources[i]);
-                                }
-                                resources = resourcesToUse;
-                            }
-                            let min;
-                            let max;
-                            let sumTotal = 0;
-                            let sumRemaining = 0;
-                            for (let i = 0; i < resources.length; ++i) {
-                                let start = moment(resources[i].StartParsed);
-                                let end = moment(resources[i].FinishParsed);
-                                if (!min || start < min)
-                                    min = start;
-                                if (!max || end > max)
-                                    max = end;
-                                sumRemaining += resources[i].value;
-                                sumTotal += resources[i].TotalWork;
-                            }
-                            return {
-                                min,
-                                max,
-                                sumRemaining,
-                                sumTotal
-                            };
-                        };
-                        var resourceConfig = {
-                            columns: [
-                                {
-                                    name: "name", label: "Name", tree: true, template: function (resource) {
-                                        return resource.text;
-                                    }
-                                },
-                                {
-                                    name: 'start', label: 'Début', align: "right", width: 80, template: function (resource) {
-                                        let taskId = that.gantt.getSelectedId();
-                                        if (!taskId)
-                                            return '';
-                                        let task = that.gantt.getTask(taskId);
-                                        let resources = task.Resources;
-                                        return moment(calcStartEnd(resources).min).format('YYYY-MM-DD');
-                                    }
-                                },
-                                {
-                                    name: 'end', label: 'Fin', align: "right", width: 80, template: function (resource) {
-                                        let taskId = that.gantt.getSelectedId();
-                                        if (!taskId)
-                                            return '';
-                                        let task = that.gantt.getTask(taskId);
-                                        let resources = task.Resources;
-                                        return moment(calcStartEnd(resources).max).format('YYYY-MM-DD');
-                                    }
-                                },
-                                {
-                                    name: 'progression', label: '% W. Compl.', align: "right", width: 70, template: function (resource) {
-                                        let taskId = that.gantt.getSelectedId();
-                                        if (!taskId)
-                                            return '';
-                                        let task = that.gantt.getTask(taskId);
-                                        let resources = task.Resources;
-                                        if (task.Resources) {
-                                            let info = calcStartEnd(resources, resource);
-                                            return Math.round((100 - info.sumRemaining * 100 / info.sumTotal) * 10) / 10 + '%';
-                                        }
-                                        return '';
-                                    }
-                                },
-                                {
-                                    name: "workload", label: "Work", align: "right", width: 65, template: function (resource) {
-                                        let taskId = that.gantt.getSelectedId();
-                                        if (!taskId)
-                                            return '';
-                                        let task = that.gantt.getTask(taskId);
-                                        let resources = task.Resources;
-                                        let info = calcStartEnd(resources, resource);
-                                        return (Math.round((info.sumTotal * 10) || 0) / 10) + "h";
-                                    }
-                                },
-                                {
-                                    name: "workload", label: "Rem. Work", align: "right", width: 65, template: function (resource) {
-                                        let taskId = that.gantt.getSelectedId();
-                                        if (!taskId)
-                                            return '';
-                                        let task = that.gantt.getTask(taskId);
-                                        let resources = task.Resources;
-                                        let info = calcStartEnd(resources, resource);
-                                        return (Math.round((info.sumRemaining * 10) || 0) / 10) + "h";
-                                    }
-                                }
-                            ]
-                        };
                         this.gantt.templates.resource_cell_value = function (start_date, end_date, resource, tasks) {
                             let totalWork = computeWork(resource, start_date, end_date);
                             let res = (Math.round(totalWork * 10) / 10);
@@ -254,38 +167,26 @@ var controls;
                             return css.join(" ");
                         };
                         let rows = [];
-                        if (this.ShowTimeline) {
-                            rows.push({
-                                cols: [
-                                    { view: "grid", group: "grids", scrollY: "scrollVer" },
-                                    { resizer: true, width: 1 },
-                                    { view: "timeline", scrollX: "scrollHor", scrollY: "scrollVer" },
-                                    { view: "scrollbar", id: "scrollVer", group: "vertical" }
-                                ],
-                                gravity: 2
-                            });
+                        rows.push({
+                            cols: [
+                                { view: "grid", group: "grids", scrollY: "scrollVer" },
+                                { resizer: true, width: 1 },
+                                { view: "timeline", scrollX: "scrollHor", scrollY: "scrollVer" },
+                                { view: "scrollbar", id: "scrollVer", group: "vertical" }
+                            ],
+                            gravity: that.TimelineGravity
+                        });
+                        if (that.ShowResourceSection) {
                             rows.push({ resizer: true, width: 1 });
                             rows.push({
-                                config: resourceConfig,
+                                config: { columns: [] },
                                 cols: [
                                     { view: "resourceGrid", group: "grids", width: 435, scrollY: "resourceVScroll" },
                                     { resizer: true, width: 1 },
                                     { view: "resourceTimeline", scrollX: "scrollHor", scrollY: "resourceVScroll" },
                                     { view: "scrollbar", id: "resourceVScroll", group: "vertical" }
                                 ],
-                                gravity: 1
-                            });
-                        }
-                        else {
-                            rows.push({
-                                config: resourceConfig,
-                                cols: [
-                                    { view: "resourceGrid", group: "grids", width: 435, scrollY: "resourceVScroll" },
-                                    { resizer: true, width: 1 },
-                                    { view: "resourceTimeline", scrollX: "scrollHor", scrollY: "resourceVScroll" },
-                                    { view: "scrollbar", id: "resourceVScroll", group: "vertical" }
-                                ],
-                                gravity: 1
+                                gravity: that.ResourceGravity
                             });
                         }
                         rows.push({ view: "scrollbar", id: "scrollHor" });
@@ -293,17 +194,17 @@ var controls;
                             css: "gantt_container",
                             rows: rows
                         };
+                        this.gantt.createDatastore({
+                            name: that.gantt.config.resource_store,
+                            type: "treeDatastore",
+                            initItem: function (item) {
+                                item.parent = item.parent || that.gantt.config.root_id;
+                                item[that.gantt.config.resource_property] = item.parent;
+                                item.open = true;
+                                return item;
+                            }
+                        });
                     }
-                    this.gantt.createDatastore({
-                        name: that.gantt.config.resource_store,
-                        type: "treeDatastore",
-                        initItem: function (item) {
-                            item.parent = item.parent || that.gantt.config.root_id;
-                            item[that.gantt.config.resource_property] = item.parent;
-                            item.open = true;
-                            return item;
-                        }
-                    });
                     this.gantt.init(this.element[0]);
                     this.getProperty("Editable").onChangedFromServer.register(this.onEditableChangedFromServer.bind(this));
                     this.getProperty("GridWidth").onChangedFromServer.register(this.onGridWidthChangedFromServer.bind(this));
@@ -329,8 +230,14 @@ var controls;
                     while (this.events.length)
                         this.gantt.detachEvent(this.events.pop());
                 }
-                reRender() {
+                render() {
                     this.gantt.render();
+                }
+                doScroll(left, top) {
+                    if (left != this.lastLeft) {
+                        this.lastLeft = left;
+                        this.render();
+                    }
                 }
                 onScaleChangeFromServer() {
                     if (this.Scale == 'Month') {
@@ -363,7 +270,7 @@ var controls;
                         }
                     }
                     if (this.isInit)
-                        this.reRender();
+                        this.render();
                 }
                 onAfterTaskDrag(id, mode) {
                     var task = this.gantt.getTask(id);
@@ -418,7 +325,7 @@ var controls;
                     this.gantt.render();
                 }
                 onResourceStoreChangedFromServer() {
-                    if (this.ShowTimeline) {
+                    if (!this.AlwaysShowFirstTaskResources) {
                         this.allResourceDic = {};
                         for (let i = 0; i < this.ResourceStore.length; ++i) {
                             let resource = this.ResourceStore[i];
@@ -432,9 +339,9 @@ var controls;
                         let that = this;
                         setTimeout(function () {
                             store.parse(that.ResourceStore);
+                            that.init();
                         }, 1);
                     }
-                    this.gantt.render();
                 }
                 onTaskDoubleClicked(id) {
                     this.workBuffer = {};
@@ -442,7 +349,7 @@ var controls;
                         this.customControlEvent('OnTaskDoubleClickedFromClient', { id });
                 }
                 onTaskClicked(id) {
-                    if (id == this.gantt.getSelectedId() || !this.ShowTimeline) // if we don't even show the timeline, ignore the error
+                    if (id == this.gantt.getSelectedId() || this.AlwaysShowFirstTaskResources) // if we don't even show the timeline, ignore the error
                         return true;
                     this.workBuffer = {};
                     if (id) {

@@ -312,7 +312,17 @@ namespace FSW.dhtmlx
             set => SubScales_.Set(value as List<GanttSubScale> ?? value.ToList());
         }
 
-        public bool ShowTimeline
+        public int TimelineGravity
+        {
+            get => GetProperty<int>(PropertyName());
+            set => SetProperty(PropertyName(), value);
+        }
+        public int ResourceGravity
+        {
+            get => GetProperty<int>(PropertyName());
+            set => SetProperty(PropertyName(), value);
+        }
+        public bool AlwaysShowFirstTaskResources
         {
             get => GetProperty<bool>(PropertyName());
             set => SetProperty(PropertyName(), value);
@@ -351,7 +361,9 @@ namespace FSW.dhtmlx
             ShowResourceSection = typeof(DataType).GetInterface(nameof(IGanttTaskWithResources), false) != null;
             RowHeight = null;
             GridWidth = 360; // default value of dhtmlx
-            ShowTimeline = true;
+            TimelineGravity = 2;
+            ResourceGravity = 1;
+            AlwaysShowFirstTaskResources = false;
 
             InitializeColumnsFromDataType();
 

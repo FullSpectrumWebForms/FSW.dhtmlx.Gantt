@@ -108,7 +108,8 @@ namespace Tests.Pages
             };
 
             TestGantt.ShowResourceSection = true;
-            TestGantt.ShowTimeline = false;
+            TestGantt.TimelineGravity = 1;
+            TestGantt.ResourceGravity = 2;
             TestGantt.OnItemResized += TestGantt_OnItemResized;
             TestGantt.OnItemMoved += TestGantt_OnItemMoved;
             TestGantt.OnItemProgressDragged += TestGantt_OnItemProgressDragged;

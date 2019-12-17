@@ -17,6 +17,9 @@ namespace FSW.dhtmlx
         [JsonProperty(PropertyName = "tree")]
         public bool IsTree { get; set; }
 
+        [JsonProperty(PropertyName = "resize")]
+        public bool Resize { get; set; } = true;
+
         [JsonProperty(PropertyName = "width", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public int? Width { get; set; }
 
