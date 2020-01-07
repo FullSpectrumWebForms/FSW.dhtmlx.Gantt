@@ -43,6 +43,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="package-lock.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FSW.dhtmlx.Gantt\FSW.dhtmlx.Gantt.csproj" />
   </ItemGroup>
   

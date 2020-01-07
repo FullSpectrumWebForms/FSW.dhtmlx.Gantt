@@ -91,9 +91,9 @@ var controls;
                                 startStr = start.toLocaleDateString();
                                 let buffer = that.workBuffer[resource.id];
                                 if (buffer) {
-                                    let work = buffer[startStr];
-                                    if (work || work == 0)
-                                        return work;
+                                    let text = buffer[startStr];
+                                    if (text)
+                                        return text;
                                 }
                                 let step, unit;
                                 if (!that.gantt.config.subscales || !(that.gantt.config.subscales.length > 0)) {
@@ -110,12 +110,12 @@ var controls;
                             if (!that.AlwaysShowFirstTaskResources) {
                                 var taskId = that.gantt.getSelectedId();
                                 if (!taskId)
-                                    return 0;
+                                    return '';
                                 task = that.gantt.getTask(taskId);
                             }
                             else
                                 task = that.gantt.getTaskByIndex(0);
-                            var totalWork = 0;
+                            let text;
                             for (let j = 0; j < (task.Resources || []).length; ++j) {
                                 let cResource = task.Resources[j];
                                 if (cResource.resource_id == resource.id) {
@@ -124,7 +124,8 @@ var controls;
                                     if (((start && end) && (s.isBetween(start, end) ||
                                         f.isBetween(start, end) ||
                                         s.isSame(start))) || !(start && end)) {
-                                        totalWork += cResource.value;
+                                        text = cResource.Text;
+                                        break;
                                     }
                                 }
                             }
@@ -132,9 +133,9 @@ var controls;
                                 let buffer = that.workBuffer[resource.id];
                                 if (!buffer)
                                     buffer = that.workBuffer[resource.id] = {};
-                                buffer[startStr] = totalWork;
+                                buffer[startStr] = text;
                             }
-                            return totalWork;
+                            return text;
                         };
                         this.gantt.templates.rightside_text = function (start, end, task) {
                             if (task.type == gantt.config.types.milestone) {
@@ -147,24 +148,7 @@ var controls;
                         this.gantt.config.order_branch = true;
                         this.gantt.templates.resource_cell_value = function (start_date, end_date, resource, tasks) {
                             let totalWork = computeWork(resource, start_date, end_date);
-                            let res = (Math.round(totalWork * 10) / 10);
-                            if (res == 0)
-                                return '';
-                            else
-                                return "<div>" + res + "</div>";
-                        };
-                        this.gantt.templates.resource_cell_class = function (start_date, end_date, resource, tasks) {
-                            let totalWork = computeWork(resource, start_date, end_date);
-                            let nbDays = moment.duration(moment(end_date).diff(moment(start_date))).asDays();
-                            let totalWorkPerDay = totalWork / nbDays;
-                            var css = [];
-                            css.push("resource_marker");
-                            //if (totalWorkPerDay <= 8) {
-                            css.push("workday_ok");
-                            //} else {
-                            //    css.push("workday_over");
-                            //}
-                            return css.join(" ");
+                            return totalWork;
                         };
                         let rows = [];
                         rows.push({
@@ -234,7 +218,7 @@ var controls;
                     this.gantt.render();
                 }
                 doScroll(left, top) {
-                    if ((left - this.lastLeft) > 10 || (this.lastLeft - left) < -10) {
+                    if ((left - this.lastLeft) > 30 || (left - this.lastLeft) < -30) {
                         this.lastLeft = left;
                         this.render();
                     }
@@ -299,8 +283,8 @@ var controls;
                         if (item.Resources) {
                             for (let j = 0; j < item.Resources.length; ++j) {
                                 let resource = item.Resources[j];
-                                resource.StartParsed = moment(resource.Start, 'DD-MM-YYYY').toDate();
-                                resource.FinishParsed = moment(resource.Finish, 'DD-MM-YYYY').toDate();
+                                resource.StartParsed = moment(resource.Start, 'YYYY-MM-DD').toDate();
+                                resource.FinishParsed = moment(resource.Finish, 'YYYY-MM-DD').toDate();
                             }
                         }
                     }
@@ -325,15 +309,7 @@ var controls;
                     this.gantt.render();
                 }
                 onResourceStoreChangedFromServer() {
-                    if (!this.AlwaysShowFirstTaskResources) {
-                        this.allResourceDic = {};
-                        for (let i = 0; i < this.ResourceStore.length; ++i) {
-                            let resource = this.ResourceStore[i];
-                            this.allResourceDic[resource.id] = resource;
-                        }
-                        this.onTaskClicked(this.gantt.getSelectedId());
-                    }
-                    else {
+                    if (this.AlwaysShowFirstTaskResources) {
                         var store = this.gantt.getDatastore(gantt.config.resource_store);
                         store.clearAll();
                         let that = this;
@@ -342,14 +318,22 @@ var controls;
                             that.init();
                         }, 1);
                     }
+                    else {
+                        this.allResourceDic = {};
+                        for (let i = 0; i < this.ResourceStore.length; ++i) {
+                            let resource = this.ResourceStore[i];
+                            this.allResourceDic[resource.id] = resource;
+                        }
+                        this.onTaskClicked(this.gantt.getSelectedId(), true);
+                    }
                 }
                 onTaskDoubleClicked(id) {
                     this.workBuffer = {};
                     if (id)
                         this.customControlEvent('OnTaskDoubleClickedFromClient', { id });
                 }
-                onTaskClicked(id) {
-                    if (id == this.gantt.getSelectedId() || this.AlwaysShowFirstTaskResources) // if we don't even show the timeline, ignore the error
+                onTaskClicked(id, forceClick) {
+                    if (!forceClick && (id == this.gantt.getSelectedId() || this.AlwaysShowFirstTaskResources)) // if we don't even show the timeline, ignore the error
                         return true;
                     this.workBuffer = {};
                     if (id) {
@@ -364,12 +348,15 @@ var controls;
                     }
                     else
                         this.selectedTaskResource = this.ResourceStore;
-                    var store = this.gantt.getDatastore(gantt.config.resource_store);
-                    store.clearAll();
-                    let that = this;
-                    setTimeout(function () {
-                        store.parse(that.selectedTaskResource);
-                    }, 1);
+                    if (this.ShowResourceSection) { // parse the resource section if it is showned
+                        var store = this.gantt.getDatastore(gantt.config.resource_store);
+                        store.clearAll();
+                        let that = this;
+                        setTimeout(function () {
+                            store.parse(that.selectedTaskResource);
+                            that.gantt.render();
+                        }, 1);
+                    }
                     return true;
                 }
                 onColumnsChangedFromServer() {

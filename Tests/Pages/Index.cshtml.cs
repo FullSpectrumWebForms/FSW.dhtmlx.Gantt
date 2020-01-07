@@ -87,21 +87,21 @@ namespace Tests.Pages
                             Resource = TestGantt.ResourceStore.First( x=> x.Id == 1 ),
                             Start = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 2 ),
                             Finish = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 3 ),
-                            Work = TimeSpan.FromHours(8)
+                            Text = "<div class='resource_marker workday_fail'>4</div>"
                         },
                         new GanttResourceTaskLink()
                         {
                             Resource = TestGantt.ResourceStore.First( x=> x.Id == 1 ),
                             Start = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 3 ),
                             Finish = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 4 ),
-                            Work = TimeSpan.FromHours(8)
+                            Text = "<div class='resource_marker workday_ok'>8</div>"
                         },
                         new GanttResourceTaskLink()
                         {
                             Resource = TestGantt.ResourceStore.First( x=> x.Id == 1 ),
                             Start = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 4 ),
                             Finish = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 5 ),
-                            Work = TimeSpan.FromHours(4)
+                            Text = "<div class='resource_marker workday_ok'>8</div>"
                         },
                     }
                 }

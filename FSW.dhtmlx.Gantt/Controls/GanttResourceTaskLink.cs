@@ -23,20 +23,15 @@ namespace FSW.dhtmlx
         }
 
         [JsonProperty]
-        private double value;
-        public TimeSpan Work
-        {
-            get => TimeSpan.FromHours(value);
-            set => this.value = value.TotalHours;
-        }
+        public string Text { get; set; }
 
         [JsonProperty(PropertyName = "Start")]
         protected string _Start;
         [JsonIgnore]
         public DateTime? Start
         {
-            get => _Start == null ? null : (DateTime?)DateTime.ParseExact(_Start, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-            set => _Start = value?.ToString("dd-MM-yyyy");
+            get => _Start == null ? null : (DateTime?)DateTime.ParseExact(_Start, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            set => _Start = value?.ToString("yyyy-MM-dd");
         }
 
         [JsonProperty(PropertyName = "Finish")]
@@ -44,17 +39,8 @@ namespace FSW.dhtmlx
         [JsonIgnore]
         public DateTime? Finish
         {
-            get => _Finish == null ? null : (DateTime?)DateTime.ParseExact(_Finish, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-            set => _Finish = value?.ToString("dd-MM-yyyy");
-        }
-
-        [JsonProperty(PropertyName = nameof(TotalWork))]
-        private double TotalWork_;
-        [JsonIgnore]
-        public TimeSpan TotalWork
-        {
-            get => TimeSpan.FromHours(TotalWork_);
-            set => this.TotalWork_ = value.TotalHours;
+            get => _Finish == null ? null : (DateTime?)DateTime.ParseExact(_Finish, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            set => _Finish = value?.ToString("yyyy-MM-dd");
         }
 
 #pragma warning restore IDE0052 // Remove unread private members
