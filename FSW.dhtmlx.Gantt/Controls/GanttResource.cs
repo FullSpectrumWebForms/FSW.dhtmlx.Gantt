@@ -28,5 +28,11 @@ namespace FSW.dhtmlx
                 parent = value?.Id;
             }
         }
+
+        [JsonProperty(PropertyName = "GridRowCss", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string GridRowCss { get; set; }
+
+        [JsonProperty(PropertyName = "RowCss", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string RowCss { get; set; }
     }
 }

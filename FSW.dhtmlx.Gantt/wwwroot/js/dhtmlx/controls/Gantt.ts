@@ -74,6 +74,10 @@ namespace controls.html.dhtmlx {
         text: string;
 
         parent: number;
+
+        GridRowCss?: string;
+
+        RowCss?: string;
     }
     interface GanttResourceTaskLink {
         resource_id: number;
@@ -269,6 +273,14 @@ namespace controls.html.dhtmlx {
                     rows.push({ resizer: true, width: 1 });
                     rows.push({
                         config: { columns: [] },
+                        templates: {
+                            grid_row_class: function (start, end, resource: GanttResource) {
+                                return resource.GridRowCss;
+                            },
+                            task_row_class: function (start, end, resource: GanttResource) {
+                                return resource.RowCss;
+                            }
+                        },
                         cols: [
                             { view: "resourceGrid", group: "grids", width: 435, scrollY: "resourceVScroll" },
                             { resizer: true, width: 1 },

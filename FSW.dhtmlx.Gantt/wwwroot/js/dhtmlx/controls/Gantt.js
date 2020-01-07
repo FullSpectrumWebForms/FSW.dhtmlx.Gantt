@@ -164,6 +164,14 @@ var controls;
                             rows.push({ resizer: true, width: 1 });
                             rows.push({
                                 config: { columns: [] },
+                                templates: {
+                                    grid_row_class: function (start, end, resource) {
+                                        return resource.GridRowCss;
+                                    },
+                                    task_row_class: function (start, end, resource) {
+                                        return resource.RowCss;
+                                    }
+                                },
                                 cols: [
                                     { view: "resourceGrid", group: "grids", width: 435, scrollY: "resourceVScroll" },
                                     { resizer: true, width: 1 },
