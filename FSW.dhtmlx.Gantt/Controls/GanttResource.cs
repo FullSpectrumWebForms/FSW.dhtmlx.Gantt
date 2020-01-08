@@ -8,7 +8,7 @@ namespace FSW.dhtmlx
         public int Id { get; set; }
 
         [JsonProperty(PropertyName = "text")]
-        [GanttResource(AlignPosition = AlignPosition.Left, IsTree = true, Text = "Name", Field = "text", Order = 0)]
+        [GanttResource(AlignPosition = AlignPosition.Left, IsTree = true, Text = "Nom", Field = "text", Order = 0)]
         public string Name { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
