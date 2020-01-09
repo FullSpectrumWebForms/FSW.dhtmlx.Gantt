@@ -334,7 +334,6 @@ namespace controls.html.dhtmlx {
             this.isInit = true;
 
             this.gantt.init(this.element[0]);
-            this.gantt.render();
         }
 
         removeControl() {
@@ -347,7 +346,7 @@ namespace controls.html.dhtmlx {
         }
         lastLeft = 0;
         doScroll(left: number, top: number) {
-            if ((left - this.lastLeft) > 30 || (left - this.lastLeft) < -30) {
+            if ((left - this.lastLeft) > 60 || (left - this.lastLeft) < -60) {
                 this.lastLeft = left;
                 this.render();
             }

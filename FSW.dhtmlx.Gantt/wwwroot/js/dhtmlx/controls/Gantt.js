@@ -216,7 +216,6 @@ var controls;
                     };
                     this.isInit = true;
                     this.gantt.init(this.element[0]);
-                    this.gantt.render();
                 }
                 removeControl() {
                     while (this.events.length)
@@ -226,7 +225,7 @@ var controls;
                     this.gantt.render();
                 }
                 doScroll(left, top) {
-                    if ((left - this.lastLeft) > 30 || (left - this.lastLeft) < -30) {
+                    if ((left - this.lastLeft) > 60 || (left - this.lastLeft) < -60) {
                         this.lastLeft = left;
                         this.render();
                     }
