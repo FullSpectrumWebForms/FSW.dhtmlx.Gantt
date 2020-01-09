@@ -234,9 +234,9 @@ namespace FSW.dhtmlx
     }
 
 
-    public class Gantt<DataType, ResourceType> : FSW.Controls.Html.HtmlControlBase 
-        where DataType : GanttItem 
-        where ResourceType: GanttResource
+    public class Gantt<DataType, ResourceType> : FSW.Controls.Html.HtmlControlBase
+        where DataType : GanttItem
+        where ResourceType : GanttResource
     {
         public override string ControlType => "dhtmlx.Gantt";
 
@@ -342,9 +342,11 @@ namespace FSW.dhtmlx
         public delegate void OnTaskDoubleClickedHandler(DataType task);
         public event OnTaskDoubleClickedHandler OnTaskDoubleClicked;
 
-        public delegate void OnTaskDoubleHandler(DataType task);
-        public event OnTaskDoubleHandler OnTaskClicked;
+        public delegate void OnTaskClickedHandler(DataType task);
+        public event OnTaskClickedHandler OnTaskClicked;
 
+        public delegate void OnResourceDoubleClickedHandler(ResourceType resource);
+        public event OnResourceDoubleClickedHandler OnResourceDoubleClicked;
 
         public override void InitializeProperties()
         {
@@ -404,6 +406,29 @@ namespace FSW.dhtmlx
                     }
                 }
             }
+        }
+
+        [Core.CoreEvent]
+        private void OnResourceDoubledClickedFromClient(int resourceId)
+        {
+            foreach (var res in ResourceStore)
+            {
+                if (res.Id == resourceId)
+                {
+                    OnResourceDoubleClicked?.Invoke(res);
+                    return;
+                }
+
+            }
+            throw new Exception("Cannot find resource");
+        }
+
+        public void ScrollToDate(DateTime date)
+        {
+            CallCustomClientEvent("scrollToDate", new
+            {
+                date = date.ToString("yyyy-MM-dd")
+            });
         }
 
         private void InitializeColumnsFromDataType()

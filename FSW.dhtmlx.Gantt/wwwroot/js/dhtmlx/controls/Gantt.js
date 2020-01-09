@@ -84,6 +84,26 @@ var controls;
                     this.events.push(this.gantt.attachEvent("onTaskClick", this.onTaskClicked.bind(this)));
                     this.events.push(this.gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
                     this.events.push(this.gantt.attachEvent("onGanttScroll", this.doScroll.bind(this)));
+                    this.events.push(this.gantt.attachEvent("onGanttReady", function () {
+                        if (that.gantt.$root._$resourceDblclickAttached) {
+                            return; // attach handler only once
+                        }
+                        that.gantt.$root._$resourceDblclickAttached = true;
+                        that.gantt.$root.ondblclick = function (e) {
+                            var target = e.target;
+                            var gridResourceRow = that.gantt.utils.dom.closest(target, ".gantt_grid_data [resource_id]");
+                            if (gridResourceRow) {
+                                var resourceId = gridResourceRow.getAttribute("resource_id");
+                                that.gantt.callEvent("onResourceDblClick", [resourceId, e]);
+                            }
+                            return true;
+                        };
+                    }));
+                    this.gantt.attachEvent("onResourceDblClick", function (resourceId, event) {
+                        if (typeof resourceId == 'string') // fail safe
+                            resourceId = parseInt(resourceId);
+                        that.customControlEvent('OnResourceDoubledClickedFromClient', { resourceId });
+                    });
                     if (this.ShowResourceSection && this.isPro) {
                         let computeWork = function (resource, start, end) {
                             let startStr;
@@ -192,7 +212,6 @@ var controls;
                             initItem: function (item) {
                                 item.parent = item.parent || that.gantt.config.root_id;
                                 item[that.gantt.config.resource_property] = item.parent;
-                                item.open = true;
                                 return item;
                             }
                         });
@@ -220,6 +239,15 @@ var controls;
                 removeControl() {
                     while (this.events.length)
                         this.gantt.detachEvent(this.events.pop());
+                }
+                scrollToDate(options) {
+                    let that = this;
+                    setTimeout(function () {
+                        that.gantt.showDate(moment(options.date, 'YYYY-MM-DD').toDate());
+                        setTimeout(function () {
+                            that.render();
+                        }, 250);
+                    }, 250);
                 }
                 render() {
                     this.gantt.render();

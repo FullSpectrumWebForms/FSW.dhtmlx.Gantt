@@ -34,5 +34,8 @@ namespace FSW.dhtmlx
 
         [JsonProperty(PropertyName = "RowCss", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string RowCss { get; set; }
+
+        [JsonProperty(PropertyName = "open")]
+        public bool Open { get; set; } = true;
     }
 }

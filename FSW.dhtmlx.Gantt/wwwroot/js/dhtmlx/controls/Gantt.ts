@@ -78,6 +78,8 @@ namespace controls.html.dhtmlx {
         GridRowCss?: string;
 
         RowCss?: string;
+
+        open: boolean;
     }
     interface GanttResourceTaskLink {
         resource_id: number;
@@ -175,6 +177,29 @@ namespace controls.html.dhtmlx {
 
             this.events.push(this.gantt.attachEvent("onAfterTaskDrag", this.onAfterTaskDrag.bind(this)));
             this.events.push(this.gantt.attachEvent("onGanttScroll", this.doScroll.bind(this)));
+            this.events.push(this.gantt.attachEvent("onGanttReady", function () {
+                if ((that.gantt as any).$root._$resourceDblclickAttached) {
+                    return; // attach handler only once
+                }
+                (that.gantt as any).$root._$resourceDblclickAttached = true;
+
+                (that.gantt as any).$root.ondblclick = function (e) {
+                    var target = e.target;
+                    var gridResourceRow = that.gantt.utils.dom.closest(target, ".gantt_grid_data [resource_id]");
+
+                    if (gridResourceRow) {
+                        var resourceId = gridResourceRow.getAttribute("resource_id");
+                        that.gantt.callEvent("onResourceDblClick", [resourceId, e]);
+                    }
+                    return true;
+                };
+            }));
+
+            this.gantt.attachEvent("onResourceDblClick" as any, function (resourceId, event) {
+                if (typeof resourceId == 'string') // fail safe
+                    resourceId = parseInt(resourceId);
+                that.customControlEvent('OnResourceDoubledClickedFromClient', { resourceId });
+            });
 
             if (this.ShowResourceSection && this.isPro) {
 
@@ -303,7 +328,6 @@ namespace controls.html.dhtmlx {
                     initItem: function (item) {
                         item.parent = item.parent || that.gantt.config.root_id;
                         item[that.gantt.config.resource_property] = item.parent;
-                        item.open = true;
                         return item;
                     }
                 });
@@ -311,7 +335,7 @@ namespace controls.html.dhtmlx {
             }
 
             this.gantt.init(this.element[0]);
-            
+
             this.getProperty("Editable").onChangedFromServer.register(this.onEditableChangedFromServer.bind(this));
             this.getProperty("GridWidth").onChangedFromServer.register(this.onGridWidthChangedFromServer.bind(this));
             this.getProperty("Columns").onChangedFromServer.register(this.onColumnsChangedFromServer.bind(this));
@@ -340,7 +364,15 @@ namespace controls.html.dhtmlx {
             while (this.events.length)
                 this.gantt.detachEvent(this.events.pop());
         }
-
+        scrollToDate(options: { date: string }) {
+            let that = this;
+            setTimeout(function () {
+                that.gantt.showDate(moment(options.date, 'YYYY-MM-DD').toDate());
+                setTimeout(function () {
+                    that.render();
+                }, 250);
+            }, 250);
+        }
         render() {
             this.gantt.render();
         }
