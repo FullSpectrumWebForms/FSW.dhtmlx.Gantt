@@ -253,10 +253,10 @@ var controls;
                     this.gantt.render();
                 }
                 doScroll(left, top) {
-                    if ((left - this.lastLeft) > 60 || (left - this.lastLeft) < -60) {
-                        this.lastLeft = left;
-                        this.render();
-                    }
+                    //if ((left - this.lastLeft) > 60 || (left - this.lastLeft) < -60) {
+                    //    this.lastLeft = left;
+                    //    this.render();
+                    //}
                 }
                 onScaleChangeFromServer() {
                     if (this.Scale == 'Month') {

@@ -73,7 +73,7 @@ namespace Tests.Pages
                 {
                     Id = ++id,
                     CustomCol = 10,
-                    Duration = 5,
+                    Duration = 120,
                     Progress = 40,
                     Order = id,
                     Open = true,
@@ -87,29 +87,30 @@ namespace Tests.Pages
                             Resource = TestGantt.ResourceStore.First( x=> x.Id == 1 ),
                             Start = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 2 ),
                             Finish = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 3 ),
-                            Text = "<div class='resource_marker workday_fail'>4</div>"
+                            Text = "<div>4</div>"
                         },
                         new GanttResourceTaskLink()
                         {
                             Resource = TestGantt.ResourceStore.First( x=> x.Id == 1 ),
                             Start = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 3 ),
                             Finish = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 4 ),
-                            Text = "<div class='resource_marker workday_ok'>8</div>"
+                            Text = "<div>8</div>"
                         },
                         new GanttResourceTaskLink()
                         {
-                            Resource = TestGantt.ResourceStore.First( x=> x.Id == 1 ),
-                            Start = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 4 ),
-                            Finish = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 5 ),
-                            Text = "<div class='resource_marker workday_ok'>8</div>"
+                            Resource = TestGantt.ResourceStore.First( x=> x.Id == 3 ),
+                            Start = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 60 ),
+                            Finish = DateTime.Today.AddDays( -(int)DateTime.Today.DayOfWeek + 61 ),
+                            Text = "<div>8</div>"
                         },
                     }
                 }
             };
 
+            TestGantt.AlwaysShowFirstTaskResources = true;
             TestGantt.ShowResourceSection = true;
             TestGantt.TimelineGravity = 1;
-            TestGantt.ResourceGravity = 2;
+            TestGantt.ResourceGravity = 9999;
             TestGantt.OnItemResized += TestGantt_OnItemResized;
             TestGantt.OnItemMoved += TestGantt_OnItemMoved;
             TestGantt.OnItemProgressDragged += TestGantt_OnItemProgressDragged;

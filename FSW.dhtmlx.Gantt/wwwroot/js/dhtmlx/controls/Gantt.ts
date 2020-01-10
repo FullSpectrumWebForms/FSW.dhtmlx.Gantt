@@ -378,10 +378,10 @@ namespace controls.html.dhtmlx {
         }
         lastLeft = 0;
         doScroll(left: number, top: number) {
-            if ((left - this.lastLeft) > 60 || (left - this.lastLeft) < -60) {
-                this.lastLeft = left;
-                this.render();
-            }
+            //if ((left - this.lastLeft) > 60 || (left - this.lastLeft) < -60) {
+            //    this.lastLeft = left;
+            //    this.render();
+            //}
         }
         onScaleChangeFromServer() {
 
