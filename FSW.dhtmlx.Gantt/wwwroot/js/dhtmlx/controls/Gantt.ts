@@ -116,6 +116,10 @@ namespace controls.html.dhtmlx {
         get ResourceColumns(): { [key: string]: GanttResourceColumn } {
             return this.getPropertyValue<this, { [key: string]: GanttResourceColumn }>("ResourceColumns");
         }
+        // ------------------------------------------------------------------------   ResourceColumns
+        get TimeslotStyle(): { [key: string]: string } {
+            return this.getPropertyValue<this, { [key: string]: string }>("TimeslotStyle");
+        }
         // ------------------------------------------------------------------------   Items
         get Scale(): string {
             return this.getPropertyValue<this, string>("Scale");
@@ -280,6 +284,9 @@ namespace controls.html.dhtmlx {
 
                     return totalWork;
                 };
+                this.gantt.templates.resource_cell_class = function (start_date, end_date, resource, tasks) {
+                    return 'gantt_resource_id_' + resource.id; // use to detect double click on the resource cell
+                };
 
 
                 let rows: any[] = [];
@@ -334,6 +341,7 @@ namespace controls.html.dhtmlx {
 
             }
 
+
             this.gantt.init(this.element[0]);
 
             this.getProperty("Editable").onChangedFromServer.register(this.onEditableChangedFromServer.bind(this));
@@ -344,6 +352,7 @@ namespace controls.html.dhtmlx {
             this.getProperty("SubScales").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this), true);
             this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this));
             this.getProperty("Links").onChangedFromServer.register(this.onLinksChangedFromServer.bind(this), true);
+            this.getProperty("TimeslotStyle").onChangedFromServer.register(this.onResourceStoreChangedFromServer.bind(this));
             this.getProperty("ResourceStore").onChangedFromServer.register(this.onResourceStoreChangedFromServer.bind(this), true);
 
 
@@ -355,9 +364,61 @@ namespace controls.html.dhtmlx {
                     return that.id + '_' + 'disp_none';
             } as any;
 
+            (this.gantt.templates as any).timeline_cell_class = function (task, date: Date) {
+
+                let dateStr = moment(date).format("YYYY-MM-DD");
+
+                let style = that.TimeslotStyle[dateStr];
+
+                return style;
+            };
+
+            this.gantt.attachEvent("onEmptyClick", this.onResouceCellClicked.bind(this));
+
             this.isInit = true;
 
             this.gantt.init(this.element[0]);
+        }
+
+
+        onEmptyClickPreviousElement = null;
+        onEmptyClickPreviousClickTime?= null;
+
+        onResouceCellClicked(e) {
+            let clickedResourceId: string = null;
+
+            if (this.onEmptyClickPreviousElement != e.target || moment().isAfter(this.onEmptyClickPreviousClickTime.add(500, 'ms'))) {
+                this.onEmptyClickPreviousElement = e.target;
+                this.onEmptyClickPreviousClickTime = moment();
+                return;
+            }
+            this.onEmptyClickPreviousElement = null;
+
+            if (e.target.className.includes('gantt_resource_id_')) {
+                clickedResourceId = e.target.className.substr(e.target.className.indexOf('gantt_resource_id_') + 'gantt_resource_id_'.length);
+            }
+            else if (e.target.className.includes('resource_marker')) {
+                var parent_classlist: string[] = e.target.parentNode.classList || ['nothing'];
+
+                for (var i = 0; i < parent_classlist.length; i++) {
+                    if (parent_classlist[i].includes('gantt_resource_id_')) {
+                        clickedResourceId = parent_classlist[i].substr('gantt_resource_id_'.length);
+                        break;
+                    }
+                }
+            }
+
+
+            if (clickedResourceId != null) {
+
+                var position = e.clientX - this.gantt.config.grid_width + this.gantt.getScrollState().x - ((this.gantt as any).$container as HTMLElement).getBoundingClientRect().x;
+                var click_date = this.gantt.dateFromPos(position);
+
+                this.customControlEvent('OnResourceTaskLinkDoubledClickedFromClient', {
+                    resourceId: parseInt(clickedResourceId),
+                    dateStr: moment(click_date).format("YYYY-MM-DD")
+                });
+            }
         }
 
         removeControl() {
@@ -383,6 +444,11 @@ namespace controls.html.dhtmlx {
             //    this.render();
             //}
         }
+
+        onTimeslotStyleChangedFromServer() {
+
+        }
+
         onScaleChangeFromServer() {
 
             if (this.Scale == 'Month') {

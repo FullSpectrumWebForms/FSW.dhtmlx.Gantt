@@ -268,6 +268,13 @@ namespace FSW.dhtmlx
             set => ResourceColumns_.Set(value is Dictionary<string, GanttResourceColumn> list ? list : value.ToDictionary(x => x.Key, x => x.Value));
         }
 
+        private GanttDateTimeContainer<string> TimeslotStyle_;
+        public IDictionary<DateTime, string> TimeslotStyle
+        {
+            get => TimeslotStyle_;
+            set => TimeslotStyle_.Set(value);
+        }
+
         private ControlPropertyList<ResourceType> ResourceStore_;
         public IList<ResourceType> ResourceStore
         {
@@ -348,6 +355,9 @@ namespace FSW.dhtmlx
         public delegate void OnResourceDoubleClickedHandler(ResourceType resource);
         public event OnResourceDoubleClickedHandler OnResourceDoubleClicked;
 
+        public delegate void OnResourceTaskLinkDoubleClickedHandler(ResourceType resource, DateTime date);
+        public event OnResourceTaskLinkDoubleClickedHandler OnResourceTaskLinkDoubleClicked;
+
         public override void InitializeProperties()
         {
             base.InitializeProperties();
@@ -358,6 +368,7 @@ namespace FSW.dhtmlx
             Links_ = new ControlPropertyList<GanttLink>(this, nameof(Links));
             ResourceStore_ = new ControlPropertyList<ResourceType>(this, nameof(ResourceStore));
             SubScales_ = new ControlPropertyList<GanttSubScale>(this, nameof(SubScales));
+            TimeslotStyle_ = new GanttDateTimeContainer<string>(this, nameof(TimeslotStyle), true);
             Scale = GanttScale.Month;
             Editable = false;
             ShowResourceSection = typeof(DataType).GetInterface(nameof(IGanttTaskWithResources), false) != null;
@@ -404,6 +415,22 @@ namespace FSW.dhtmlx
 
                         item.GridCssClass = Id + "_color_" + index;
                     }
+                }
+            }
+        }
+
+        [Core.CoreEvent]
+        private void OnResourceTaskLinkDoubledClickedFromClient(int resourceId, string dateStr)
+        {
+
+            foreach (var res in ResourceStore)
+            {
+                if (res.Id == resourceId)
+                {
+                    var date = DateTime.ParseExact(dateStr, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                    date = date.AddDays(-(int)date.DayOfWeek);
+                    OnResourceTaskLinkDoubleClicked?.Invoke(res, date);
+                    break;
                 }
             }
         }

@@ -66,6 +66,8 @@ namespace Tests.Pages
                 }
             };
 
+            TestGantt.TimeslotStyle[DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 4)] = "colTest";
+
             int id = 1;
             TestGantt.Items = new[]
             {

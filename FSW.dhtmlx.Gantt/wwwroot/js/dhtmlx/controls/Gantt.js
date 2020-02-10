@@ -18,6 +18,8 @@ var controls;
                     this.isPro = false;
                     this.workBuffer = {};
                     this.allResourceDic = {};
+                    this.onEmptyClickPreviousElement = null;
+                    this.onEmptyClickPreviousClickTime = null;
                     this.lastLeft = 0;
                 }
                 // ------------------------------------------------------------------------   Items
@@ -39,6 +41,10 @@ var controls;
                 // ------------------------------------------------------------------------   ResourceColumns
                 get ResourceColumns() {
                     return this.getPropertyValue("ResourceColumns");
+                }
+                // ------------------------------------------------------------------------   ResourceColumns
+                get TimeslotStyle() {
+                    return this.getPropertyValue("TimeslotStyle");
                 }
                 // ------------------------------------------------------------------------   Items
                 get Scale() {
@@ -170,6 +176,9 @@ var controls;
                             let totalWork = computeWork(resource, start_date, end_date);
                             return totalWork;
                         };
+                        this.gantt.templates.resource_cell_class = function (start_date, end_date, resource, tasks) {
+                            return 'gantt_resource_id_' + resource.id; // use to detect double click on the resource cell
+                        };
                         let rows = [];
                         rows.push({
                             cols: [
@@ -225,6 +234,7 @@ var controls;
                     this.getProperty("SubScales").onChangedFromServer.register(this.onScaleChangeFromServer.bind(this), true);
                     this.getProperty("Items").onChangedFromServer.register(this.onItemsChangedFromServer.bind(this));
                     this.getProperty("Links").onChangedFromServer.register(this.onLinksChangedFromServer.bind(this), true);
+                    this.getProperty("TimeslotStyle").onChangedFromServer.register(this.onResourceStoreChangedFromServer.bind(this));
                     this.getProperty("ResourceStore").onChangedFromServer.register(this.onResourceStoreChangedFromServer.bind(this), true);
                     this.gantt.templates.grid_row_class = function (start, end, task) {
                         return task.GridCssClass;
@@ -233,8 +243,43 @@ var controls;
                         if (task.color == 'Transparent' || task.color == 'transparent')
                             return that.id + '_' + 'disp_none';
                     };
+                    this.gantt.templates.timeline_cell_class = function (task, date) {
+                        let dateStr = moment(date).format("YYYY-MM-DD");
+                        let style = that.TimeslotStyle[dateStr];
+                        return style;
+                    };
+                    this.gantt.attachEvent("onEmptyClick", this.onResouceCellClicked.bind(this));
                     this.isInit = true;
                     this.gantt.init(this.element[0]);
+                }
+                onResouceCellClicked(e) {
+                    let clickedResourceId = null;
+                    if (this.onEmptyClickPreviousElement != e.target || moment().isAfter(this.onEmptyClickPreviousClickTime.add(500, 'ms'))) {
+                        this.onEmptyClickPreviousElement = e.target;
+                        this.onEmptyClickPreviousClickTime = moment();
+                        return;
+                    }
+                    this.onEmptyClickPreviousElement = null;
+                    if (e.target.className.includes('gantt_resource_id_')) {
+                        clickedResourceId = e.target.className.substr(e.target.className.indexOf('gantt_resource_id_') + 'gantt_resource_id_'.length);
+                    }
+                    else if (e.target.className.includes('resource_marker')) {
+                        var parent_classlist = e.target.parentNode.classList || ['nothing'];
+                        for (var i = 0; i < parent_classlist.length; i++) {
+                            if (parent_classlist[i].includes('gantt_resource_id_')) {
+                                clickedResourceId = parent_classlist[i].substr('gantt_resource_id_'.length);
+                                break;
+                            }
+                        }
+                    }
+                    if (clickedResourceId != null) {
+                        var position = e.clientX - this.gantt.config.grid_width + this.gantt.getScrollState().x - this.gantt.$container.getBoundingClientRect().x;
+                        var click_date = this.gantt.dateFromPos(position);
+                        this.customControlEvent('OnResourceTaskLinkDoubledClickedFromClient', {
+                            resourceId: parseInt(clickedResourceId),
+                            dateStr: moment(click_date).format("YYYY-MM-DD")
+                        });
+                    }
                 }
                 removeControl() {
                     while (this.events.length)
@@ -257,6 +302,8 @@ var controls;
                     //    this.lastLeft = left;
                     //    this.render();
                     //}
+                }
+                onTimeslotStyleChangedFromServer() {
                 }
                 onScaleChangeFromServer() {
                     if (this.Scale == 'Month') {
