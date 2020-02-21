@@ -1,0 +1,19 @@
+﻿@page "/"
+<input id="pageId" value="@PageId" />
+<input id="pageIdAuth" value="@Auth" />
+
+@code{
+
+    public int PageId;
+    public string Auth = "";
+
+    IndexPage Page = new IndexPage();
+
+    protected override void OnInitialized()
+    {
+        var res = FSW.ModelBase.RegisterFSWPage(Page, null, null, out var _, out var _2);
+
+        PageId = res.id;
+        Auth = res.auth;
+    }
+}

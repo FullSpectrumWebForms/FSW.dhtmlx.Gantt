@@ -30,7 +30,7 @@ namespace Tests
             {
                 options.EnableEndpointRouting = false;
             });
-            FSW.Core.Startup.ConfigureMvc(mvc);
+            FSW.Core.Startup.ConfigureMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -28,9 +28,9 @@ namespace Tests.Pages
 
         private readonly Gantt<CustomGanttItem, CustomGanttResource> TestGantt = new Gantt<CustomGanttItem, CustomGanttResource>();
 
-        public override void OnPageLoad()
+        public override async Task OnPageLoad()
         {
-            base.OnPageLoad();
+            await base.OnPageLoad();
 
             TestGantt.Scale = GanttScale.Day;
             //TestGantt.RowHeight = 20;

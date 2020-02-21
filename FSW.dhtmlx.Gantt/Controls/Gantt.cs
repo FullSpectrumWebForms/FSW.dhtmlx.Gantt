@@ -244,7 +244,11 @@ namespace FSW.dhtmlx
         public IList<DataType> Items
         {
             get => Items_;
-            set => Items_.Set(value is List<DataType> list ? list : value.ToList());
+            set
+            {
+                Items_.Set(value is List<DataType> list ? list : value.ToList());
+                Gantt_OnItemsChanged();
+            }
         }
 
         private ControlPropertyList<GanttLink> Links_;
@@ -358,9 +362,9 @@ namespace FSW.dhtmlx
         public delegate void OnResourceTaskLinkDoubleClickedHandler(ResourceType resource, DateTime date);
         public event OnResourceTaskLinkDoubleClickedHandler OnResourceTaskLinkDoubleClicked;
 
-        public override void InitializeProperties()
+        public override async Task InitializeProperties()
         {
-            base.InitializeProperties();
+            await base.InitializeProperties();
 
             Items_ = new ControlPropertyList<DataType>(this, nameof(Items));
             Columns_ = new ControlPropertyDictionary<GanttColumn>(this, nameof(Columns));
@@ -379,13 +383,11 @@ namespace FSW.dhtmlx
             AlwaysShowFirstTaskResources = false;
 
             InitializeColumnsFromDataType();
-
-            GetPropertyInternal(nameof(Items)).OnInstantNewValue += Gantt_OnItemsChanged;
         }
 
-        protected override void ControlInitialized()
+        protected override async Task ControlInitialized()
         {
-            base.ControlInitialized();
+            await base.ControlInitialized();
 
             InternalStyles["." + Id + "_disp_none"] = new Dictionary<string, string>
             {
@@ -394,27 +396,24 @@ namespace FSW.dhtmlx
         }
 
         private Dictionary<System.Drawing.Color, int> AlreadyUsedGridColors = new Dictionary<System.Drawing.Color, int>();
-        private void Gantt_OnItemsChanged(Core.Property property, object lastValue, object newValue, Core.Property.UpdateSource source)
+        private void Gantt_OnItemsChanged()
         {
-            if (OverrideGridCssWithGridColor && source == Core.Property.UpdateSource.Server)
+            foreach (var item in Items)
             {
-                foreach (var item in Items)
+                if (item.GridColor != System.Drawing.Color.Empty)
                 {
-                    if (item.GridColor != System.Drawing.Color.Empty)
+                    if (!AlreadyUsedGridColors.TryGetValue(item.GridColor, out var index))
                     {
-                        if (!AlreadyUsedGridColors.TryGetValue(item.GridColor, out var index))
+                        index = AlreadyUsedGridColors.Count;
+                        AlreadyUsedGridColors.Add(item.GridColor, index);
+
+                        InternalStyles["." + Id + "_color_" + index] = new Dictionary<string, string>
                         {
-                            index = AlreadyUsedGridColors.Count;
-                            AlreadyUsedGridColors.Add(item.GridColor, index);
-
-                            InternalStyles["." + Id + "_color_" + index] = new Dictionary<string, string>
-                            {
-                                ["background-color"] = System.Drawing.ColorTranslator.ToHtml(item.GridColor)
-                            };
-                        }
-
-                        item.GridCssClass = Id + "_color_" + index;
+                            ["background-color"] = System.Drawing.ColorTranslator.ToHtml(item.GridColor)
+                        };
                     }
+
+                    item.GridCssClass = Id + "_color_" + index;
                 }
             }
         }

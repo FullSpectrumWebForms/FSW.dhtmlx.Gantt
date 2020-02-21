@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Pages\index.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
@@ -16,6 +20,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FSW.dhtmlx.Gantt\FSW.dhtmlx.Gantt.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="Pages\index.razor" />
   </ItemGroup>
 
 </Project>
