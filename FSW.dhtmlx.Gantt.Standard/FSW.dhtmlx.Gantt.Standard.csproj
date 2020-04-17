@@ -12,7 +12,7 @@
   
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <TypeScriptToolsVersion>3.7</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>3.8</TypeScriptToolsVersion>
     <ApplicationIcon />
     <OutputType>Library</OutputType>
     <StartupObject />

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>FSW.dhtmlx.Gantt</PackageId>
-    <Version>3.0.0.1-beta</Version>
+    <Version>3.0.2.1</Version>
     <Authors>Pascal Arnold</Authors>
     <Company>N/A</Company>
     <PackageTags>FSW dhtmlx gantt</PackageTags>
@@ -12,7 +12,7 @@
   
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <TypeScriptToolsVersion>3.7</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>3.8</TypeScriptToolsVersion>
     <ApplicationIcon />
     <OutputType>Library</OutputType>
     <StartupObject />

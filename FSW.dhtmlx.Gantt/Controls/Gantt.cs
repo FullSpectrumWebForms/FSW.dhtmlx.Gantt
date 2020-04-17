@@ -341,25 +341,25 @@ namespace FSW.dhtmlx
 
         public bool OverrideGridCssWithGridColor { get; set; } = false;
 
-        public delegate void OnItemResizedHandler(DataType item, DateTime oldStart, int oldDuration);
+        public delegate Task OnItemResizedHandler(DataType item, DateTime oldStart, int oldDuration);
         public event OnItemResizedHandler OnItemResized;
 
-        public delegate void OnItemMovedHandler(DataType item, DateTime oldStart);
+        public delegate Task OnItemMovedHandler(DataType item, DateTime oldStart);
         public event OnItemMovedHandler OnItemMoved;
 
-        public delegate void OnItemProgressDraggedHandler(DataType item, float oldProgress);
+        public delegate Task OnItemProgressDraggedHandler(DataType item, float oldProgress);
         public event OnItemProgressDraggedHandler OnItemProgressDragged;
 
-        public delegate void OnTaskDoubleClickedHandler(DataType task);
+        public delegate Task OnTaskDoubleClickedHandler(DataType task);
         public event OnTaskDoubleClickedHandler OnTaskDoubleClicked;
 
-        public delegate void OnTaskClickedHandler(DataType task);
+        public delegate Task OnTaskClickedHandler(DataType task);
         public event OnTaskClickedHandler OnTaskClicked;
 
-        public delegate void OnResourceDoubleClickedHandler(ResourceType resource);
+        public delegate Task OnResourceDoubleClickedHandler(ResourceType resource);
         public event OnResourceDoubleClickedHandler OnResourceDoubleClicked;
 
-        public delegate void OnResourceTaskLinkDoubleClickedHandler(ResourceType resource, DateTime date);
+        public delegate Task OnResourceTaskLinkDoubleClickedHandler(ResourceType resource, DateTime date);
         public event OnResourceTaskLinkDoubleClickedHandler OnResourceTaskLinkDoubleClicked;
 
         public override async Task InitializeProperties()
@@ -419,30 +419,29 @@ namespace FSW.dhtmlx
         }
 
         [Core.CoreEvent]
-        private void OnResourceTaskLinkDoubledClickedFromClient(int resourceId, string dateStr)
+        private Task OnResourceTaskLinkDoubledClickedFromClient(int resourceId, string dateStr)
         {
-
             foreach (var res in ResourceStore)
             {
                 if (res.Id == resourceId)
                 {
                     var date = DateTime.ParseExact(dateStr, "yyyy-MM-dd", CultureInfo.InvariantCulture);
                     date = date.AddDays(-(int)date.DayOfWeek);
-                    OnResourceTaskLinkDoubleClicked?.Invoke(res, date);
-                    break;
+                    return OnResourceTaskLinkDoubleClicked?.Invoke(res, date) ?? Task.CompletedTask;
                 }
             }
+
+            throw new Exception("Cannot find resource");
         }
 
         [Core.CoreEvent]
-        private void OnResourceDoubledClickedFromClient(int resourceId)
+        private Task OnResourceDoubledClickedFromClient(int resourceId)
         {
             foreach (var res in ResourceStore)
             {
                 if (res.Id == resourceId)
                 {
-                    OnResourceDoubleClicked?.Invoke(res);
-                    return;
+                    return OnResourceDoubleClicked?.Invoke(res) ?? Task.CompletedTask;
                 }
 
             }
@@ -532,30 +531,38 @@ namespace FSW.dhtmlx
 
 #pragma warning disable IDE0051 // Remove unused private members
         [Core.CoreEvent]
-        private void OnTaskDoubleClickedFromClient(int id)
+        private Task OnTaskDoubleClickedFromClient(int id)
         {
             var item = GetItem(id);
 
-            OnTaskDoubleClicked?.Invoke(item);
+            return OnTaskDoubleClicked?.Invoke(item) ?? Task.CompletedTask;
         }
         [Core.CoreEvent]
-        private void OnTaskClickedFromClient(int id)
+        private Task OnTaskClickedFromClient(int id)
         {
-            var item = GetItem(id);
+            DataType item;
+            try
+            {
+                item = GetItem(id);
+            }
+            catch(KeyNotFoundException)
+            {
+                return Task.CompletedTask;
+            }
 
-            OnTaskClicked?.Invoke(item);
+            return OnTaskClicked?.Invoke(item) ?? Task.CompletedTask;
         }
         [Core.CoreEvent]
-        private void OnItemProgressionChangedFromClient(int id, float progression)
+        private Task OnItemProgressionChangedFromClient(int id, float progression)
         {
             var item = GetItem(id);
 
             var oldProgression = item.Progress;
             item.Progress = progression;
-            OnItemProgressDragged?.Invoke(item, oldProgression);
+            return OnItemProgressDragged?.Invoke(item, oldProgression) ?? Task.CompletedTask;
         }
         [Core.CoreEvent]
-        private void OnItemDraggedFromClient(int id, string newStart, string newEnd, string mode)
+        private async Task OnItemDraggedFromClient(int id, string newStart, string newEnd, string mode)
         {
             var item = GetItem(id);
             var oldStart = item.StartDate;
@@ -568,10 +575,10 @@ namespace FSW.dhtmlx
                 var end = DateTime.ParseExact(newEnd, "dd-MM-yyyy", CultureInfo.InvariantCulture);
                 item.Duration = (int)(end - item.StartDate)?.TotalDays;
 
-                OnItemResized?.Invoke(item, oldStart.Value, oldDuration.Value);
+                await (OnItemResized?.Invoke(item, oldStart.Value, oldDuration.Value) ?? Task.CompletedTask);
             }
             else if (mode == "move")
-                OnItemMoved?.Invoke(item, oldStart.Value);
+                await (OnItemMoved?.Invoke(item, oldStart.Value) ?? Task.CompletedTask);
         }
 #pragma warning restore IDE0051 // Remove unused private members
 
@@ -582,7 +589,7 @@ namespace FSW.dhtmlx
                 if (Items[i].Id == id)
                     return Items[i];
             }
-            throw new Exception("Item not found:" + id);
+            throw new KeyNotFoundException("Item not found:" + id);
         }
         public GanttLink GetLink(int id)
         {
