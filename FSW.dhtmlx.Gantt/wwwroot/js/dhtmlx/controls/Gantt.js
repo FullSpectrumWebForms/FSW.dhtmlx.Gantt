@@ -309,7 +309,7 @@ var controls;
                     if (this.Scale == 'Month') {
                         this.gantt.config.subscales = [{ unit: 'week', step: 1, date: '%F %d' }];
                         this.gantt.config.scale_unit = 'month';
-                        this.gantt.config.date_scale = '%F';
+                        this.gantt.config.date_scale = '%F %Y';
                     }
                     else if (this.Scale == 'Week') {
                         this.gantt.config.subscales = [{ unit: 'day', step: 1, date: '%D' }];
